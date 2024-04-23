@@ -1,11 +1,13 @@
 cmake_minimum_required ( VERSION 3.4.3 )
 project ( ml_classifiers CXX )
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set (CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/home/angaja/mlsnort/boost_1_67_0/")
 
-set (CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/home/lnutimura/snort_src/boost_1_67_0")
+
 #set (CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/python3.7")
 
 if ( APPLE )
@@ -49,8 +51,12 @@ message ( "[*] BOOST_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}" )
 message ( "[*] BOOST_LIBRARIES: ${Boost_LIBRARIES}" )
 message ( "[*] BOOST_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}" )
 
-include_directories ( ${Python3_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} )
-target_link_libraries ( ml_classifiers ${Python3_LIBRARIES} ${Boost_LIBRARIES} )
+message("[*] SNORT3_LIBRARY_DIRS: ${SNORT3_LIBRARY_DIRS}")
+message("[*] SNORT3_LIBRARIES: ${SNORT3_LIBRARIES}")
+message("[*] SNORT3_INCLUDE_DIRS: ${SNORT3_INCLUDE_DIRS}")
+
+include_directories(${Python3_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${SNORT3_INCLUDE_DIRS})
+target_link_libraries(ml_classifiers ${Python3_LIBRARIES} ${Boost_LIBRARIES} ${SNORT3_LIBRARIES})
 
 target_include_directories (
     ml_classifiers PUBLIC
@@ -60,5 +66,5 @@ target_include_directories (
 install (
     TARGETS ml_classifiers
     LIBRARY
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/${CMAKE_PROJECT_NAME}/inspectors"
+        DESTINATION "/usr/local/snort/lib/snort/plugins/${CMAKE_PROJECT_NAME}/inspectors"
 )

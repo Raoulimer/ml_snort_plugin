@@ -29,8 +29,8 @@
 
 using namespace snort;
 
-static const char* s_name = "ml_classifiers";
-static const char* s_help = "machine learning classifiers";
+static const char *s_name = "ml_classifiers";
+static const char *s_help = "machine learning classifiers";
 
 static THREAD_LOCAL ProfileStats ml_PerfStats;
 static THREAD_LOCAL SimpleStats ml_stats;
@@ -39,150 +39,125 @@ static THREAD_LOCAL SimpleStats ml_stats;
 // class stuff
 //-------------------------------------------------------------------------
 
-class MLClassifiers : public Inspector
-{
+class MLClassifiers : public Inspector {
 public:
-    MLClassifiers();
+  MLClassifiers();
 
-    bool configure(SnortConfig*) override;
-    void show(SnortConfig*) override;
-    void eval(Packet*) override;
+  bool configure(SnortConfig *) override;
+  void show(const SnortConfig *) const override;
+  void eval(Packet *) override;
 };
 
-MLClassifiers::MLClassifiers()
-{
-    LogMessage("[*] MLClassifiers::MLClassifiers()\n");
+MLClassifiers::MLClassifiers() {
+  LogMessage("[*] MLClassifiers::MLClassifiers()\n");
 }
 
-bool MLClassifiers::configure(SnortConfig*)
-{
-    std::thread verify_thread(verify_timeouts);
-    verify_thread.detach();
-    return true;
+bool MLClassifiers::configure(SnortConfig *) {
+  std::thread verify_thread(verify_timeouts);
+  verify_thread.detach();
+  return true;
 }
 
-void MLClassifiers::show(SnortConfig*)
-{
-    LogMessage("[*] MLClassifers::show\n");
+void MLClassifiers::show(const SnortConfig *) const {
+  LogMessage("[*] MLClassifers::show\n");
 }
 
-void MLClassifiers::eval(Packet* p)
-{
-    /*
-    Para cada pacote "p", é preciso:
-        - Criar, a partir de suas informações, um respectivo "flow_id";
-        - Com base neste "flow_id", verificar se o mesmo já existe dentro da lista de conexões;
-            - Se existe, ótimo, basta adicionar as informações do novo pacote à respectiva conexão;
-            - Se não existe, é preciso criar uma nova conexão, inicializar seus campos e adicionar à lista de conexões.
-    */
-    if ((p->is_tcp() || p->is_udp() || p->is_icmp()) && p->flow) {
-        std::vector<std::string> id_candidates = get_id_candidates(p);
+void MLClassifiers::eval(Packet *p) {
+  /*
+  Para cada pacote "p", é preciso:
+      - Criar, a partir de suas informações, um respectivo "flow_id";
+      - Com base neste "flow_id", verificar se o mesmo já existe dentro da lista
+  de conexões;
+          - Se existe, ótimo, basta adicionar as informações do novo pacote à
+  respectiva conexão;
+          - Se não existe, é preciso criar uma nova conexão, inicializar seus
+  campos e adicionar à lista de conexões.
+  */
+  if ((p->is_tcp() || p->is_udp() || p->is_icmp()) && p->flow) {
+    std::vector<std::string> id_candidates = get_id_candidates(p);
 
-        /* Attempts to find an existent connection with the flow_id equals to id_candidates[0]. */
-        connections_it = connections.find(id_candidates[0]);
+    /* Attempts to find an existent connection with the flow_id equals to
+     * id_candidates[0]. */
+    connections_it = connections.find(id_candidates[0]);
 
-        /* If it couldn't find an existent connection with the above flow_id, it
-           attempts again with the flow_id equals to id_candidates[1] .*/
-        if (connections_it == connections.end()) {
-            connections_it = connections.find(id_candidates[1]);
-        }
-
-        /* Finally, checks if any connection was found. */
-        if (connections_it != connections.end()) {
-            /* Found it! */
-
-            /* Adds the packet's information to the connection. */
-            connections_it->second.add_packet(p);
-        } else {
-            /* Couldn't find it... */
-
-            /* Creates a new connection and inserts it in the connections list. */
-            Connection newConnection(p, id_candidates[0]);
-            connections.insert(std::pair<std::string, Connection>(id_candidates[0], newConnection));
-        }
+    /* If it couldn't find an existent connection with the above flow_id, it
+       attempts again with the flow_id equals to id_candidates[1] .*/
+    if (connections_it == connections.end()) {
+      connections_it = connections.find(id_candidates[1]);
     }
-    ++ml_stats.total_packets;
+
+    /* Finally, checks if any connection was found. */
+    if (connections_it != connections.end()) {
+      /* Found it! */
+
+      /* Adds the packet's information to the connection. */
+      connections_it->second.add_packet(p);
+    } else {
+      /* Couldn't find it... */
+
+      /* Creates a new connection and inserts it in the connections list. */
+      Connection newConnection(p, id_candidates[0]);
+      connections.insert(
+          std::pair<std::string, Connection>(id_candidates[0], newConnection));
+    }
+  }
+  ++ml_stats.total_packets;
 }
 
 //-------------------------------------------------------------------------
 // module stuff
 //-------------------------------------------------------------------------
 
-static const Parameter ml_params[] =
-{
-    { "key", Parameter::PT_SELECT, "ab | dt | rf | svc | bnb | gnb", "ab", "machine learning classifier" },
-    { nullptr, Parameter::PT_MAX, nullptr, nullptr, nullptr }
-};
+static const Parameter ml_params[] = {
+    {"key", Parameter::PT_SELECT, "ab | dt | rf | svc | bnb | gnb", "ab",
+     "machine learning classifier"},
+    {nullptr, Parameter::PT_MAX, nullptr, nullptr, nullptr}};
 
-class MLClassifiersModule : public Module
-{
+class MLClassifiersModule : public Module {
 public:
-    MLClassifiersModule() : Module(s_name, s_help, ml_params)
-    { }
+  MLClassifiersModule() : Module(s_name, s_help, ml_params) {}
 
-    const PegInfo* get_pegs() const override
-    { return simple_pegs; }
+  const PegInfo *get_pegs() const override { return simple_pegs; }
 
-    PegCount* get_counts() const override
-    { return (PegCount*)&ml_stats; }
+  PegCount *get_counts() const override { return (PegCount *)&ml_stats; }
 
-    ProfileStats* get_profile() const override
-    { return &ml_PerfStats; }
+  ProfileStats *get_profile() const override { return &ml_PerfStats; }
 
-    bool set(const char*, Value& v, SnortConfig*) override;
+  bool set(const char *, Value &v, SnortConfig *) override;
 
-    Usage get_usage() const override
-    { return INSPECT; }
+  Usage get_usage() const override { return INSPECT; }
 };
 
-bool MLClassifiersModule::set(const char*, Value& v, SnortConfig*)
-{
-    LogMessage("[*] MLClassifiersModule::set\n");
-    LogMessage("[*] Key: ");
-    LogMessage(v.get_string());
-    LogMessage("\n");
-    
-    ml_technique = v.get_string();
-    std::cout << ml_technique << std::endl;
-    
-    return true;
+bool MLClassifiersModule::set(const char *, Value &v, SnortConfig *) {
+  LogMessage("[*] MLClassifiersModule::set\n");
+  LogMessage("[*] Key: ");
+  LogMessage(v.get_string());
+  LogMessage("\n");
+
+  ml_technique = v.get_string();
+  std::cout << ml_technique << std::endl;
+
+  return true;
 }
 
 //-------------------------------------------------------------------------
 // api stuff
 //-------------------------------------------------------------------------
 
-static Module* mod_ctor()
-{ return new MLClassifiersModule; }
+static Module *mod_ctor() { return new MLClassifiersModule; }
 
-static void mod_dtor(Module* m)
-{ delete m; }
+static void mod_dtor(Module *m) { delete m; }
 
-static Inspector* ml_ctor(Module* m)
-{
-    MLClassifiersModule* mod = (MLClassifiersModule*)m;
-    return new MLClassifiers();
+static Inspector *ml_ctor(Module *m) {
+  MLClassifiersModule *mod = (MLClassifiersModule *)m;
+  return new MLClassifiers();
 }
 
-static void ml_dtor(Inspector* p)
-{
-    delete p;
-}
+static void ml_dtor(Inspector *p) { delete p; }
 
-static const InspectApi ml_api
-{
-    {
-        PT_INSPECTOR,
-        sizeof(InspectApi),
-        INSAPI_VERSION,
-        0,
-        API_RESERVED,
-        API_OPTIONS,
-        s_name,
-        s_help,
-        mod_ctor,
-        mod_dtor
-    },
+static const InspectApi ml_api{
+    {PT_INSPECTOR, sizeof(InspectApi), INSAPI_VERSION, 0, API_RESERVED,
+     API_OPTIONS, s_name, s_help, mod_ctor, mod_dtor},
     IT_PROBE,
     PROTO_BIT__ALL,
     nullptr, // buffers
@@ -197,9 +172,4 @@ static const InspectApi ml_api
     nullptr  // reset
 };
 
-SO_PUBLIC const BaseApi* snort_plugins[] =
-{
-    &ml_api.base,
-    nullptr
-};
-
+SO_PUBLIC const BaseApi *snort_plugins[] = {&ml_api.base, nullptr};
