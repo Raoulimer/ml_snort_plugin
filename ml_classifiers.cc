@@ -158,7 +158,7 @@ static void ml_dtor(Inspector *p) { delete p; }
 static const InspectApi ml_api{
     {PT_INSPECTOR, sizeof(InspectApi), INSAPI_VERSION, 0, API_RESERVED,
      API_OPTIONS, s_name, s_help, mod_ctor, mod_dtor},
-    IT_PROBE,
+    IT_PACKET,
     PROTO_BIT__ALL,
     nullptr, // buffers
     nullptr, // service

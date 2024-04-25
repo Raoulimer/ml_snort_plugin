@@ -66,5 +66,5 @@ target_include_directories (
 install (
     TARGETS ml_classifiers
     LIBRARY
-        DESTINATION "/usr/local/snort/lib/snort/plugins/${CMAKE_PROJECT_NAME}/inspectors"
+        DESTINATION "/usr/local/snort/lib/snort/plugins/alternative/${CMAKE_PROJECT_NAME}/inspectors"
 )

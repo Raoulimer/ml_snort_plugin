@@ -43,25 +43,25 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  if(EXISTS "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so")
+  if(EXISTS "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so")
     file(RPATH_CHECK
-         FILE "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so"
+         FILE "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so"
          RPATH "")
   endif()
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so")
+   "/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors" TYPE MODULE FILES "/home/angaja/mlfork/ml_classifiers/build/ml_classifiers.so")
-  if(EXISTS "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so" AND
-     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so")
+  file(INSTALL DESTINATION "/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors" TYPE MODULE FILES "/home/angaja/mlfork/ml_classifiers/build/ml_classifiers.so")
+  if(EXISTS "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so")
     if(CMAKE_INSTALL_DO_STRIP)
-      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/ml_classifiers/inspectors/ml_classifiers.so")
+      execute_process(COMMAND "/usr/bin/strip" "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so")
     endif()
   endif()
 endif()

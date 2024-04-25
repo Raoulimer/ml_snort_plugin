@@ -37,6 +37,7 @@ if __name__ == "__main__":
         "bnb": "clf_bnb.joblib",
         "gnb": "clf_gnb.joblib",
     }
+    print("/home/angaja/mlfork/ml_classifiers/joblibs/" + clf_joblibs[sys.argv[1]])
     clf = load("/home/angaja/mlfork/ml_classifiers/joblibs/" + clf_joblibs[sys.argv[1]])
     scaler = load("/home/angaja/mlfork/ml_classifiers/joblibs/scaler.joblib")
 
