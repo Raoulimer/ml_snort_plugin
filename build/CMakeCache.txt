@@ -22,6 +22,8 @@ Boost_INCLUDE_DIR:PATH=/usr/include
 
 Boost_PYTHON311_LIBRARY_RELEASE:STRING=/usr/lib/libboost_python311.so.1.83.0
 
+Boost_PYTHON312_LIBRARY_RELEASE:STRING=/usr/lib/libboost_python312.so.1.83.0
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
@@ -216,7 +218,7 @@ ml_classifiers_BINARY_DIR:STATIC=/home/angaja/mlfork/ml_classifiers/build
 ml_classifiers_IS_TOP_LEVEL:STATIC=ON
 
 //Dependencies for the target
-ml_classifiers_LIB_DEPENDS:STATIC=general;/usr/lib/libpython3.11.so;general;Boost::python;
+ml_classifiers_LIB_DEPENDS:STATIC=general;/usr/lib/libpython3.12.so;general;Boost::python;
 
 //Value Computed by CMake
 ml_classifiers_SOURCE_DIR:STATIC=/home/angaja/mlfork/ml_classifiers
@@ -360,11 +362,11 @@ CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/usr/lib/cmake/Boost-1.83.0/BoostConfig.cmake][cfound components: python311 ][v1.83.0()]
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/usr/lib/cmake/Boost-1.83.0/BoostConfig.cmake][cfound components: python312 ][v1.83.0()]
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v2.1.1()]
 //Details about finding Python3
-FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/usr/bin/python3.11][/usr/include/python3.11][/usr/lib/libpython3.11.so][cfound components: Interpreter Development Development.Module Development.Embed ][v3.11.8()]
+FIND_PACKAGE_MESSAGE_DETAILS_Python3:INTERNAL=[/usr/bin/python3.12][/usr/include/python3.12][/usr/lib/libpython3.12.so][cfound components: Interpreter Development Development.Module Development.Embed ][v3.12.3()]
 //ADVANCED property for variable: PKG_CONFIG_ARGN
 PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
@@ -408,19 +410,19 @@ SNORT3_snort_VERSION:INTERNAL=
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 //Compiler reason failure
 _Python3_Compiler_REASON_FAILURE:INTERNAL=
-_Python3_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=cd187341980210f8c9d45764118628b7
-_Python3_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=5cfb69aa044db11e10ae2019970ae537
+_Python3_DEVELOPMENT_EMBED_SIGNATURE:INTERNAL=b52a81971c6dc1c58b0824fc0888bfb0
+_Python3_DEVELOPMENT_MODULE_SIGNATURE:INTERNAL=a80fdade31ace3e44fbb2c81da19bc52
 //Development reason failure
 _Python3_Development_REASON_FAILURE:INTERNAL=
 //Path to a program.
-_Python3_EXECUTABLE:INTERNAL=/usr/bin/python3.11
+_Python3_EXECUTABLE:INTERNAL=/usr/bin/python3.12
 //Path to a file.
-_Python3_INCLUDE_DIR:INTERNAL=/usr/include/python3.11
+_Python3_INCLUDE_DIR:INTERNAL=/usr/include/python3.12
 //Python3 Properties
-_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;11;8;64;;cpython-311-x86_64-linux-gnu;abi3;/usr/lib/python3.11;/usr/lib/python3.11;/usr/lib/python3.11/site-packages;/usr/lib/python3.11/site-packages
-_Python3_INTERPRETER_SIGNATURE:INTERNAL=c5ea8e56613f13ab5e55239a52af8d00
+_Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;12;3;64;;cpython-312-x86_64-linux-gnu;abi3;/usr/lib/python3.12;/usr/lib/python3.12;/usr/lib/python3.12/site-packages;/usr/lib/python3.12/site-packages
+_Python3_INTERPRETER_SIGNATURE:INTERNAL=f811b8a062a8994e96ffe87747bf9bfe
 //Path to a library.
-_Python3_LIBRARY_RELEASE:INTERNAL=/usr/lib/libpython3.11.so
+_Python3_LIBRARY_RELEASE:INTERNAL=/usr/lib/libpython3.12.so
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 __pkg_config_checked_SNORT3:INTERNAL=1

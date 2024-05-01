@@ -92,8 +92,8 @@ ml_classifiers_EXTERNAL_OBJECTS =
 
 ml_classifiers.so: CMakeFiles/ml_classifiers.dir/ml_classifiers.cc.o
 ml_classifiers.so: CMakeFiles/ml_classifiers.dir/build.make
-ml_classifiers.so: /usr/lib/libpython3.11.so
-ml_classifiers.so: /usr/lib/libboost_python311.so.1.83.0
+ml_classifiers.so: /usr/lib/libpython3.12.so
+ml_classifiers.so: /usr/lib/libboost_python312.so.1.83.0
 ml_classifiers.so: CMakeFiles/ml_classifiers.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/angaja/mlfork/ml_classifiers/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX shared module ml_classifiers.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/ml_classifiers.dir/link.txt --verbose=$(VERBOSE)

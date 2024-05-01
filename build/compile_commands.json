@@ -1,7 +1,7 @@
 [
 {
   "directory": "/home/angaja/mlfork/ml_classifiers/build",
-  "command": "/usr/bin/c++ -DBOOST_PYTHON_DYN_LINK -DBOOST_PYTHON_NO_LIB -Dml_classifiers_EXPORTS -I/usr/include/python3.11 -I/usr/include/snort -std=c++14 -fPIC -o CMakeFiles/ml_classifiers.dir/ml_classifiers.cc.o -c /home/angaja/mlfork/ml_classifiers/ml_classifiers.cc",
+  "command": "/usr/bin/c++ -DBOOST_PYTHON_DYN_LINK -DBOOST_PYTHON_NO_LIB -Dml_classifiers_EXPORTS -I/usr/include/python3.12 -I/usr/include/snort -std=c++14 -fPIC -o CMakeFiles/ml_classifiers.dir/ml_classifiers.cc.o -c /home/angaja/mlfork/ml_classifiers/ml_classifiers.cc",
   "file": "/home/angaja/mlfork/ml_classifiers/ml_classifiers.cc",
   "output": "CMakeFiles/ml_classifiers.dir/ml_classifiers.cc.o"
 }

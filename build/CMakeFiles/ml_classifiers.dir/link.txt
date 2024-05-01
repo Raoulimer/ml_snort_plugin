@@ -1,1 +1,1 @@
-/usr/bin/c++ -fPIC -shared  -o ml_classifiers.so CMakeFiles/ml_classifiers.dir/ml_classifiers.cc.o  /usr/lib/libpython3.11.so /usr/lib/libboost_python311.so.1.83.0
+/usr/bin/c++ -fPIC -shared  -o ml_classifiers.so CMakeFiles/ml_classifiers.dir/ml_classifiers.cc.o  /usr/lib/libpython3.12.so /usr/lib/libboost_python312.so.1.83.0

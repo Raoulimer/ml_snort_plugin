@@ -14,7 +14,6 @@
 #include <thread>
 #include <vector>
 
-
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/count.hpp>
 #include <boost/accumulators/statistics/max.hpp>
@@ -23,13 +22,11 @@
 #include <boost/accumulators/statistics/sum.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
-
 #include "protocols/icmp4.h"
 #include "protocols/icmp6.h"
 #include "protocols/packet.h"
 #include "protocols/tcp.h"
 #include "protocols/udp.h"
-
 
 /* For convenience. */
 namespace bp = boost::python;
@@ -1098,9 +1095,9 @@ void classify_connections() {
     while (std::getline(inputFile, line)) {
       float predictedValue;
 
-      std::cout << "[-] " << t_connections.id[index] << std::endl;
-      t_connections.connections[index].print_feature_vector(
-          t_connections.features[index]);
+      std::cout << "[-] ML-Classified: " << t_connections.id[index];
+      // t_connections.connections[index].print_feature_vector(
+      //     t_connections.features[index]);
       std::cout << "\tResult: ";
 
       std::istringstream iss(line);
