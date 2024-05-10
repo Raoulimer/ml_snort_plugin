@@ -1079,9 +1079,19 @@ void classify_connections() {
 
   /* Executes the script that classifies every single feature vector in the
    * timeouted_connections.txt file. */
-  std::string py_cmd =
-      "python3 /home/angaja/mlfork/ml_classifiers/ml_classifiers.py " +
-      ml_technique;
+  /*  std::string py_cmd =
+        "python3 /home/angaja/mlfork/ml_classifiers/ml_classifiers.py " +
+        ml_technique;
+    */
+  std::string py_cmd2 =
+      "python "
+      "/home/angaja/mlfork/ml_classifiers/python-utility/csvTransforer.py";
+  system(py_cmd2.c_str());
+
+  // Calling Machine Learning Model to ouput predictions
+  std::string py_cmd = "python "
+                       "/home/angaja/mlfork/ml_classifiers/ml_models/"
+                       "IntrusionModelNetworkPredictor.py";
   system(py_cmd.c_str());
 
   /* Reads the predictions of every single connection timeouted previously. */
@@ -1103,7 +1113,7 @@ void classify_connections() {
       std::istringstream iss(line);
       iss >> predictedValue;
 
-      if (predictedValue == 0.0f) {
+      if (predictedValue <= 0.90f) {
         std::cout << "Normal (" << predictedValue << ")" << std::endl;
       } else {
         std::cout << "Attack (" << predictedValue << ")" << std::endl;
