@@ -46,10 +46,21 @@ def load_and_concatenate_data(option):
             "../AIDetection/cleanedData/dirtyData/allcleanDays/Day8_clean.csv",
             skip_blank_lines=True,
         )
-        data = x_df8
+        x_df9 = pd.read_csv(
+            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day9_clean.csv",
+            skip_blank_lines=True,
+        )
+
+        data = pd.concat([x_df8, x_df9], ignore_index=True)
+    elif option == "botnet":
+        x_df10 = pd.read_csv(
+            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day10_clean.csv",
+            skip_blank_lines=True,
+        )
+        data = x_df10
     else:
         raise ValueError(
-            "Invalid option. Choose one of: ddos, bruteforce, sql, infiltration"
+            "Invalid option. Choose one of: ddos, bruteforce, sql, infiltration, botnet"
         )
 
     return data
@@ -78,12 +89,22 @@ elif option == "bruteforce":
     combined_df = pd.concat([instances_label_0, instances_label_1])
 elif option == "sql":
     instances_label_1 = data.query("Label == 5")
+    instances_label_0_small = data.query(
+        "Label == 0"
+    ).sample(
+        instances_label_1.size * 10
+    )  # fixes class imbalance, but shows how easy it is to manipulate performance metrics
     instances_label_1["Label"] = 1
-    combined_df = pd.concat([instances_label_0, instances_label_1])
+    combined_df = pd.concat([instances_label_0_small, instances_label_1])
 elif option == "infiltration":
     instances_label_1 = data.query("Label == 4")
     instances_label_1["Label"] = 1
     combined_df = pd.concat([instances_label_0, instances_label_1])
+elif option == "botnet":
+    instances_label_1 = data.query("Label == 1")
+    instances_label_1["Label"] = 1
+    combined_df = pd.concat([instances_label_0, instances_label_1])
+
 else:
     raise ValueError(
         "Invalid option. Choose one of: ddos, bruteforce, sql, infiltration"
