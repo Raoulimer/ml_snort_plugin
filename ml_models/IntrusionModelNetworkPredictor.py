@@ -91,7 +91,7 @@ def setBestfeatures(option):
 # Step 1: Load the pre-trained model
 model = XGBClassifier()
 model.load_model(
-    "/home/angaja/privateRepo/ml_classifiers/ml_models/{}Model.json".format(option)
+    "/home/angaja/privateRepo/ml_classifiers/ml_models/XGB/{}Model.json".format(option)
 )  # Load the CSV files using pandas
 # x_df1 = pd.read_csv("../AIDetection/cleanedData/dirtyData/allcleanDays/Day1_clean.csv", skip_blank_lines=True)
 x_df = pd.read_csv(
