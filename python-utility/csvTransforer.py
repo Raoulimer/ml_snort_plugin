@@ -4,7 +4,7 @@ import pandas as pd
 # reading given csv file
 # and creating dataframe
 predictions = pd.read_csv(
-    "/home/angaja/mlfork/ml_classifiers/tmp/timeouted_connections.txt",
+    "/home/angaja/privateRepo/ml_classifiers/tmp/timeouted_connections.txt",
     header=None,
     delimiter=" ",
 )
@@ -90,5 +90,5 @@ predictions.columns = [
     "Idle Min",
 ]  # store dataframe into csv file
 predictions.to_csv(
-    "/home/angaja/mlfork/ml_classifiers/tmp/formattedExtractions.csv", index=None
+    "/home/angaja/privateRepo/ml_classifiers/tmp/formattedExtractions.csv", index=None
 )

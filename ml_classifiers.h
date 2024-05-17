@@ -47,7 +47,7 @@ class Connection;
 std::mutex ml_mutex;
 
 /* Selected Machine Learning Technique. */
-std::string ml_technique;
+std::string attack_type;
 
 /* Map of current active connections.*/
 std::map<std::string, Connection> connections;
@@ -1052,83 +1052,10 @@ std::vector<std::string> get_id_candidates(Packet *p) {
   return id_candidates;
 }
 
-/*
-    Auxiliary function used to classify the timeouted connections.
-*/
-void classify_connections() {
-  /* Creates a file containing the feature vector of each timeouted connection.
-   */
-  std::ofstream outputFile;
-  outputFile.open(
-      "/home/angaja/mlfork/ml_classifiers/tmp/timeouted_connections.txt",
-      std::ios_base::trunc);
-
-  for (int i = 0; i < t_connections.id.size(); i++) {
-    outputFile << std::fixed << std::setprecision(9);
-
-    for (int j = 0; j < 78; j++) {
-      outputFile << t_connections.features[i][j];
-
-      if (j == 77)
-        outputFile << std::scientific << "\n";
-      else
-        outputFile << " ";
-    }
-  }
-  outputFile.close();
-
-  /* Executes the script that classifies every single feature vector in the
-   * timeouted_connections.txt file. */
-  /*  std::string py_cmd =
-        "python3 /home/angaja/mlfork/ml_classifiers/ml_classifiers.py " +
-        ml_technique;
-    */
-  std::string py_cmd2 =
-      "python "
-      "/home/angaja/mlfork/ml_classifiers/python-utility/csvTransforer.py";
-  system(py_cmd2.c_str());
-
-  // Calling Machine Learning Model to ouput predictions
-  std::string py_cmd = "python "
-                       "/home/angaja/mlfork/ml_classifiers/ml_models/"
-                       "IntrusionModelNetworkPredictor.py";
-  system(py_cmd.c_str());
-
-  /* Reads the predictions of every single connection timeouted previously. */
-  std::ifstream inputFile("/home/angaja/mlfork/ml_classifiers/tmp/"
-                          "timeouted_connections_results.txt");
-
-  if (inputFile.is_open()) {
-    std::string line;
-    uint32_t index = 0;
-
-    while (std::getline(inputFile, line)) {
-      float predictedValue;
-
-      std::cout << "[-] ML-Classified: " << t_connections.id[index];
-      // t_connections.connections[index].print_feature_vector(
-      //     t_connections.features[index]);
-      std::cout << "\tResult: ";
-
-      std::istringstream iss(line);
-      iss >> predictedValue;
-
-      if (predictedValue <= 0.90f) {
-        std::cout << "Normal (" << predictedValue << ")" << std::endl;
-      } else {
-        std::cout << "Attack (" << predictedValue << ")" << std::endl;
-      }
-
-      index++;
-    }
-
-    inputFile.close();
-  }
-
-  t_connections.id.clear();
-  t_connections.connections.clear();
-  t_connections.features.clear();
-}
+void createOutputStream();
+void transformOutputStream();
+void printClassifiedConnections(std::string attackName);
+void classify_connections(); // function classifies expired connections.
 
 /*
     Auxiliary function used to check currently active connections

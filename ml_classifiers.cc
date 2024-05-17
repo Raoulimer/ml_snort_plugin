@@ -103,13 +103,98 @@ void MLClassifiers::eval(Packet *p) {
   }
   ++ml_stats.total_packets;
 }
+//-------------------------------------------------------------------------
+// functional stuff
+//-------------------------------------------------------------------------
+
+void createOutputStream() {
+  std::ofstream outputFile;
+  outputFile.open(
+      "/home/angaja/privateRepo/ml_classifiers/tmp/timeouted_connections.txt",
+      std::ios_base::trunc);
+
+  for (int i = 0; i < t_connections.id.size(); i++) {
+    outputFile << std::fixed << std::setprecision(9);
+
+    for (int j = 0; j < 78; j++) {
+      outputFile << t_connections.features[i][j];
+
+      if (j == 77)
+        outputFile << std::scientific << "\n";
+      else
+        outputFile << " ";
+    }
+  }
+  outputFile.close();
+}
+
+void transformOutputStream() {
+  std::string py_cmd2 =
+      "python "
+      "/home/angaja/privateRepo/ml_classifiers/python-utility/csvTransforer.py";
+  system(py_cmd2.c_str());
+}
+
+void printClassifiedConnections(std::string attackName) {
+  std::ifstream inputFile("/home/angaja/privateRepo/ml_classifiers/tmp/"
+                          "timeouted_connections_results" +
+                          attackName + ".txt");
+
+  if (inputFile.is_open()) {
+    std::string line;
+    uint32_t index = 0;
+
+    while (std::getline(inputFile, line)) {
+      float predictedValue;
+
+      std::cout << "[-] ML-Classified: " << t_connections.id[index]
+                << "\tResult: ";
+
+      std::istringstream iss(line);
+      iss >> predictedValue;
+
+      if (predictedValue <= 0.90f) {
+        std::cout << "Normal (" << predictedValue << ")" << std::endl;
+      } else {
+        std::cout << "Attack (" << predictedValue << ") - " << attackName
+                  << std::endl;
+      }
+
+      index++;
+    }
+
+    inputFile.close();
+  }
+}
+
+void classify_connections() {
+  createOutputStream();
+  transformOutputStream();
+
+  std::string attackTypes[] = {"ddos", "bruteforce", "botnet", "sql",
+                               "infiltration"};
+  for (std::string attack : attackTypes) {
+    std::string py_cmd = "python "
+                         "/home/angaja/privateRepo/ml_classifiers/ml_models/"
+                         "IntrusionModelNetworkPredictor.py " +
+                         attack;
+    system(py_cmd.c_str());
+
+    printClassifiedConnections(attack);
+  }
+
+  t_connections.id.clear();
+  t_connections.connections.clear();
+  t_connections.features.clear();
+}
 
 //-------------------------------------------------------------------------
 // module stuff
 //-------------------------------------------------------------------------
 
 static const Parameter ml_params[] = {
-    {"key", Parameter::PT_SELECT, "ab | dt | rf | svc | bnb | gnb", "ab",
+    {"key", Parameter::PT_SELECT,
+     "ddos | sql | infiltration | botnet | bruteforce", "ddos",
      "machine learning classifier"},
     {nullptr, Parameter::PT_MAX, nullptr, nullptr, nullptr}};
 
@@ -134,8 +219,8 @@ bool MLClassifiersModule::set(const char *, Value &v, SnortConfig *) {
   LogMessage(v.get_string());
   LogMessage("\n");
 
-  ml_technique = v.get_string();
-  std::cout << ml_technique << std::endl;
+  attack_type = v.get_string();
+  std::cout << attack_type << std::endl;
 
   return true;
 }

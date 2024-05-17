@@ -1,4 +1,4 @@
-# Install script for directory: /home/angaja/mlfork/ml_classifiers
+# Install script for directory: /home/angaja/privateRepo/ml_classifiers
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -57,7 +57,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-  file(INSTALL DESTINATION "/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors" TYPE MODULE FILES "/home/angaja/mlfork/ml_classifiers/build/ml_classifiers.so")
+  file(INSTALL DESTINATION "/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors" TYPE MODULE FILES "/home/angaja/privateRepo/ml_classifiers/build/ml_classifiers.so")
   if(EXISTS "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so")
     if(CMAKE_INSTALL_DO_STRIP)
@@ -74,5 +74,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/angaja/mlfork/ml_classifiers/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/angaja/privateRepo/ml_classifiers/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
