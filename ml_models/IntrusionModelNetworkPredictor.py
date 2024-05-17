@@ -122,3 +122,5 @@ with open(
 ) as file:
     for prediction in predictions:
         file.write("{:.2f}\n".format(prediction.item()))
+
+print("Debug: Predictions for {} Attack Type finished\n".format(option))

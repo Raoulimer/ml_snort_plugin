@@ -26,6 +26,7 @@
 #include "log/messages.h"
 #include "profiler/profiler.h"
 #include "protocols/packet.h"
+#include <ostream>
 
 using namespace snort;
 
@@ -63,16 +64,7 @@ void MLClassifiers::show(const SnortConfig *) const {
 }
 
 void MLClassifiers::eval(Packet *p) {
-  /*
-  Para cada pacote "p", é preciso:
-      - Criar, a partir de suas informações, um respectivo "flow_id";
-      - Com base neste "flow_id", verificar se o mesmo já existe dentro da lista
-  de conexões;
-          - Se existe, ótimo, basta adicionar as informações do novo pacote à
-  respectiva conexão;
-          - Se não existe, é preciso criar uma nova conexão, inicializar seus
-  campos e adicionar à lista de conexões.
-  */
+  std::lock_guard<std::mutex> lock(ml_mutex);
   if ((p->is_tcp() || p->is_udp() || p->is_icmp()) && p->flow) {
     std::vector<std::string> id_candidates = get_id_candidates(p);
 
@@ -146,18 +138,13 @@ void printClassifiedConnections(std::string attackName) {
 
     while (std::getline(inputFile, line)) {
       float predictedValue;
-
-      std::cout << "[-] ML-Classified: " << t_connections.id[index]
-                << "\tResult: ";
-
       std::istringstream iss(line);
       iss >> predictedValue;
 
-      if (predictedValue <= 0.90f) {
-        std::cout << "Normal (" << predictedValue << ")" << std::endl;
-      } else {
-        std::cout << "Attack (" << predictedValue << ") - " << attackName
-                  << std::endl;
+      if (predictedValue >= 0.90f) {
+        std::cout << "[-] ML-Classified: " << t_connections.id[index]
+                  << "\tResult: " << "Attack (" << predictedValue << ") - "
+                  << attackName << std::endl;
       }
 
       index++;
@@ -174,11 +161,17 @@ void classify_connections() {
   std::string attackTypes[] = {"ddos", "bruteforce", "botnet", "sql",
                                "infiltration"};
   for (std::string attack : attackTypes) {
+    std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
+
     std::string py_cmd = "python "
                          "/home/angaja/privateRepo/ml_classifiers/ml_models/"
                          "IntrusionModelNetworkPredictor.py " +
                          attack;
     system(py_cmd.c_str());
+
+    std::cout << "Debug: Cotinuing execution after calling " + attack +
+                     " Classifier"
+              << std::endl;
 
     printClassifiedConnections(attack);
   }

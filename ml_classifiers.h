@@ -84,8 +84,10 @@ public:
       Initializes most of this class' parameters.
   */
   Connection(Packet *p, std::string id) {
-    std::cout << "[+] " << id << std::endl;
-
+    bool setlog = false;
+    if (setlog) {
+      std::cout << "[Log-Packet] " << id << std::endl;
+    }
     /* Initializes the flags_counter and other parameters. */
     init_flags();
     init_parameters();
