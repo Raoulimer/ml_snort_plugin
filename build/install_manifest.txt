@@ -1,1 +1,0 @@
-/usr/local/snort/lib/snort/plugins/alternative/ml_classifiers/inspectors/ml_classifiers.so
