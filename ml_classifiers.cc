@@ -158,29 +158,38 @@ void classify_connections() {
   createOutputStream();
   transformOutputStream();
 
+  std::vector<std::thread> classificationThreads;
   std::string attackTypes[] = {"ddos", "bruteforce", "botnet", "sql",
                                "infiltration"};
-  for (std::string attack : attackTypes) {
-    std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
 
-    std::string py_cmd = "python "
-                         "/home/angaja/privateRepo/ml_classifiers/ml_models/"
-                         "IntrusionModelNetworkPredictor.py " +
-                         attack;
-    system(py_cmd.c_str());
+  for (const std::string &attack : attackTypes) {
+    classificationThreads.emplace_back([attack]() {
+      std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
 
-    std::cout << "Debug: Cotinuing execution after calling " + attack +
-                     " Classifier"
-              << std::endl;
+      std::string py_cmd = "python "
+                           "/home/angaja/privateRepo/ml_classifiers/ml_models/"
+                           "IntrusionModelNetworkPredictor.py " +
+                           attack;
+      system(py_cmd.c_str());
 
-    printClassifiedConnections(attack);
+      std::cout << "Debug: Continuing execution after calling " + attack +
+                       " Classifier"
+                << std::endl;
+
+      printClassifiedConnections(attack);
+    });
+  }
+
+  for (auto &thread : classificationThreads) {
+    if (thread.joinable()) {
+      thread.join();
+    }
   }
 
   t_connections.id.clear();
   t_connections.connections.clear();
   t_connections.features.clear();
 }
-
 //-------------------------------------------------------------------------
 // module stuff
 //-------------------------------------------------------------------------
