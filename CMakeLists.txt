@@ -21,6 +21,8 @@ add_library (
     ml_classifiers MODULE
     ml_classifiers.cc
     ml_classifiers.h
+    connection.h
+    connection.cc
 )
 
 if ( APPLE )
