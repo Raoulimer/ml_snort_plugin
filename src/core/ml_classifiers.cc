@@ -23,8 +23,8 @@
 //--------------------------------------------------------------------------
 
 // My headers
-#include "ml_classifiers.h"
-#include "connection.h"
+#include "../../include/ml_classifiers.h"
+#include "../featureExtraction/connection.h"
 
 // Stuff from Cisco that every inspector uses
 #include "detection/detection_engine.h"
@@ -157,9 +157,9 @@ void createOutputStream() {
 }
 
 void transformOutputStream() {
-  std::string py_cmd2 =
-      "python "
-      "/home/angaja/privateRepo/ml_classifiers/python-utility/csvTransforer.py";
+  std::string py_cmd2 = "python "
+                        "/home/angaja/privateRepo/ml_classifiers/src/"
+                        "python-utility/csvTransforer.py";
   system(py_cmd2.c_str());
 }
 
@@ -203,7 +203,8 @@ void classify_connections() {
       std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
 
       std::string py_cmd = "python "
-                           "/home/angaja/privateRepo/ml_classifiers/ml_models/"
+                           "/home/angaja/privateRepo/ml_classifiers/src/"
+                           "machineLearning/ml_models/"
                            "IntrusionModelNetworkPredictor.py " +
                            attack;
       system(py_cmd.c_str());

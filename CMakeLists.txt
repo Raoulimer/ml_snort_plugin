@@ -19,10 +19,10 @@ pkg_search_module ( SNORT3 REQUIRED snort>=3 )
 
 add_library (
     ml_classifiers MODULE
-    ml_classifiers.cc
-    ml_classifiers.h
-    connection.h
-    connection.cc
+    src/core/ml_classifiers.cc
+    include/ml_classifiers.h
+    src/featureExtraction/connection.h
+    src/featureExtraction/connection.cc
 )
 
 if ( APPLE )
