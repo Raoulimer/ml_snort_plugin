@@ -3,20 +3,16 @@
 
 #include "detection/detection_engine.h"
 
-#include "protocols/packet.h"
 #include <algorithm>
 #include <boost/python.hpp>
-#include <chrono>
-#include <fstream>
-#include <iomanip>
+
 #include <iostream>
 #include <map>
 
-#include <mutex>
-#include <ostream>
-#include <thread>
+#include "protocols/packet.h"
+#include "protocols/tcp.h"
 
-#include <sstream>
+#include <ostream>
 
 using namespace snort;
 

@@ -12,11 +12,7 @@
 #include <boost/accumulators/statistics/sum.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
-#include "protocols/icmp4.h"
-#include "protocols/icmp6.h"
 #include "protocols/packet.h"
-#include "protocols/tcp.h"
-#include "protocols/udp.h"
 
 using namespace snort;
 using namespace boost::accumulators;

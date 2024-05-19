@@ -15,32 +15,45 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //--------------------------------------------------------------------------
-// ml_classifier.cc author Luan Utimura <luan.utimura@gmail.com>
+// Connections.cc inspired by Luan Utimura's ml_classifiers
+// <luan.utimura@gmail.com> which seems to be inspired by the CICFLOWMETER
+// Source Code
+//--------------------------------------------------------------------------
+// Everything else from Raoul Frank <raoul.ilja.frank@protonmail.com>
+//--------------------------------------------------------------------------
 
+// My headers
 #include "ml_classifiers.h"
 #include "connection.h"
 
+// Stuff from Cisco that every inspector uses
 #include "detection/detection_engine.h"
-#include "events/event_queue.h"
 #include "framework/inspector.h"
 #include "framework/module.h"
 #include "log/messages.h"
 #include "profiler/profiler.h"
+
+// Protocols
+#include "protocols/icmp4.h"
 #include "protocols/packet.h"
-#include <algorithm>
+
+// Utility
 #include <boost/python.hpp>
 #include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <sstream>
 
+// Multithreading
 #include <mutex>
 #include <ostream>
 #include <thread>
 
-#include <sstream>
-
+//-------------------------------------------------------------------------
+// GLOBAL
+//-------------------------------------------------------------------------
 using namespace snort;
 
 static const char *s_name = "ml_classifiers";
@@ -58,8 +71,9 @@ std::map<std::string, Connection> connections;
 std::map<std::string, Connection>::iterator connections_it;
 
 TimeoutedConnections t_connections;
+
 //-------------------------------------------------------------------------
-// class stuff
+// Inspector Inheritance
 //-------------------------------------------------------------------------
 
 class MLClassifiers : public Inspector {

@@ -1,17 +1,11 @@
 #include <boost/python.hpp>
 
-#include <algorithm>
-#include <chrono>
 #include <cstdlib>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
+
 #include <map>
 
-#include <sstream>
 #include <string>
 #include <sys/time.h>
-#include <thread>
 #include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
@@ -22,14 +16,7 @@
 #include <boost/accumulators/statistics/sum.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 
-#include "protocols/icmp4.h"
-#include "protocols/icmp6.h"
 #include "protocols/packet.h"
-#include "protocols/tcp.h"
-#include "protocols/udp.h"
-
-/* For convenience. */
-namespace bp = boost::python;
 
 using namespace snort;
 using namespace boost::accumulators;
