@@ -355,7 +355,7 @@ public:
 bool MLClassifiersModule::set(const char *, Value &v, SnortConfig *) {
   LogMessage("[*] MLClassifiersModule::set\n");
   LogMessage("[*] Key: ");
-  LogMessage(v.get_string());
+  LogMessage("%s", v.get_string());
   LogMessage("\n");
 
   attack_type = v.get_string();
