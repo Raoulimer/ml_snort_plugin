@@ -43,4 +43,9 @@ RUN rm -rf /tmp/snort-build
 
 USER builder
 
-COPY . .
+COPY . /home/builder/myplugin
+
+USER root
+RUN pacman -S boost --noconfirm
+RUN cd myplugin/build; rm -rf *; cmake ..; make; make install
+

@@ -5,56 +5,56 @@ import sys
 def load_and_concatenate_data(option):
     if option == "ddos":
         x_df2 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day2_clean.csv",
+            "Day2_clean.csv",
             skip_blank_lines=True,
         )
         x_df3 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day3_clean.csv",
+            "Day3_clean.csv",
             skip_blank_lines=True,
         )
         x_df5 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day5_clean.csv",
+            "Day5_clean.csv",
             skip_blank_lines=True,
         )
         data = pd.concat([x_df2, x_df3, x_df5], ignore_index=True)
     elif option == "bruteforce":
         x_df1 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day1_clean.csv",
+            "Day1_clean.csv",
             skip_blank_lines=True,
         )
         x_df6 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day6_clean.csv",
+            "Day6_clean.csv",
             skip_blank_lines=True,
         )
         x_df7 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day7_clean.csv",
+            "Day7_clean.csv",
             skip_blank_lines=True,
         )
         data = pd.concat([x_df1, x_df6, x_df7], ignore_index=True)
     elif option == "sql":
         x_df6 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day6_clean.csv",
+            "Day6_clean.csv",
             skip_blank_lines=True,
         )
         x_df7 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day7_clean.csv",
+            "Day7_clean.csv",
             skip_blank_lines=True,
         )
         data = pd.concat([x_df6, x_df7], ignore_index=True)
     elif option == "infiltration":
         x_df8 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day8_clean.csv",
+            "Day8_clean.csv",
             skip_blank_lines=True,
         )
         x_df9 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day9_clean.csv",
+            "Day9_clean.csv",
             skip_blank_lines=True,
         )
 
         data = pd.concat([x_df8, x_df9], ignore_index=True)
     elif option == "botnet":
         x_df10 = pd.read_csv(
-            "../AIDetection/cleanedData/dirtyData/allcleanDays/Day10_clean.csv",
+            "Day10_clean.csv",
             skip_blank_lines=True,
         )
         data = x_df10
@@ -112,4 +112,4 @@ else:
 
 
 shuffled = combined_df.sample(frac=1)
-shuffled.to_csv(f"{option}Days.csv", index=False)
+shuffled.to_csv(f"fullyFormattedData/{option}Days.csv", index=False)
