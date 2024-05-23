@@ -1,9 +1,13 @@
 # ml_classifiers
 **ml_classifiers** is a Snort 3 Machine Learning-based Inspector for Network Traffic Bi-directional Flow Classification.
 
-Forked from Inutimuras Version. Aim is to adapt for usage with models trained on the CIC IDS 2018 dataset.
-Written for my Bachelors Thesis
+Forked from Inutimuras Version. 
 
+Aim is to adapt for usage with models trained on the CIC IDS 2018 dataset.
+Uses Multithreading in order to run multiple attack-type specific models at once
+
+NOTE THAT connection.cc /connection.h are not MY ORIGINAL CODE.
+Its taked from Inutimuras ml_classifiers plugin, although I took the liberty of moving the implementation of functions into a dedicated sourcefile
 
 Currently Extractable Features:
 

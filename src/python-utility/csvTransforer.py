@@ -1,10 +1,17 @@
 # importing pandas library
 import pandas as pd
+import os
 
 # reading given csv file
 # and creating dataframe
+os.system("pwd")
+currdir = os.path.dirname(__file__)
+rel_path_to_tmp = os.path.join(currdir, "../../tmp/")
+print("Debug", rel_path_to_tmp + "timeouted_connections.txt")
+
+# This path is necessary since this script is being called from the ml_models directory
 predictions = pd.read_csv(
-    "/home/angaja/privateRepo/ml_classifiers/tmp/timeouted_connections.txt",
+    rel_path_to_tmp + "timeouted_connections.txt",
     header=None,
     delimiter=" ",
 )
@@ -89,6 +96,5 @@ predictions.columns = [
     "Idle Max",
     "Idle Min",
 ]  # store dataframe into csv file
-predictions.to_csv(
-    "/home/angaja/privateRepo/ml_classifiers/tmp/formattedExtractions.csv", index=None
-)
+predictions.to_csv(rel_path_to_tmp + "formattedExtractions.csv")
+print("Debug: finished transforming Expired Connection")

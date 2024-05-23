@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import sys
+import os
 from xgboost import XGBClassifier
 from sklearn.preprocessing import MinMaxScaler
 
@@ -14,6 +15,9 @@ option = sys.argv[1]
 if option not in ["ddos", "botnet", "infiltration", "sql", "bruteforce"]:
     print("Choose one of the options {ddos, botnet, infiltration, sql, bruteforce}")
     sys.exit(1)
+
+currdir = os.path.dirname(__file__)
+rel_path_to_tmp = os.path.join(currdir, "../../../tmp/")
 
 
 def setBestfeatures(option):
@@ -91,11 +95,11 @@ def setBestfeatures(option):
 # Step 1: Load the pre-trained model
 model = XGBClassifier()
 model.load_model(
-    "/home/angaja/privateRepo/ml_classifiers/src/machineLearning/ml_models/XGB/{}Model.json".format(option)
+    currdir + "/XGB/{}Model.json".format(option)
 )  # Load the CSV files using pandas
-# x_df1 = pd.read_csv("../AIDetection/cleanedData/dirtyData/allcleanDays/Day1_clean.csv", skip_blank_lines=True)
+
 x_df = pd.read_csv(
-    "/home/angaja/privateRepo/ml_classifiers/tmp/formattedExtractions.csv",
+    rel_path_to_tmp + "formattedExtractions.csv",
     skip_blank_lines=True,
 )
 
@@ -115,9 +119,7 @@ x_df["Predictions"] = predictions
 
 # Write predictions to a text file
 with open(
-    "/home/angaja/privateRepo/ml_classifiers/tmp/timeouted_connections_results{}.txt".format(
-        option
-    ),
+    rel_path_to_tmp + "timeouted_connections_results{}.txt".format(option),
     "w",
 ) as file:
     for prediction in predictions:
