@@ -145,13 +145,14 @@ void createOutputStream() {
   outputFile.open(root_dir + "/tmp/timeouted_connections.txt",
                   std::ios_base::trunc);
 
-  for (int i = 0; i < t_connections.id.size(); i++) {
+  for (int connectionNr = 0; connectionNr < t_connections.id.size();
+       connectionNr++) {
     outputFile << std::fixed << std::setprecision(9);
 
-    for (int j = 0; j < 78; j++) {
-      outputFile << t_connections.features[i][j];
+    for (int featureNr = 0; featureNr < 78; featureNr++) {
+      outputFile << t_connections.features[connectionNr][featureNr];
 
-      if (j == 77)
+      if (featureNr == 77)
         outputFile << std::scientific << "\n";
       else
         outputFile << " ";
@@ -261,8 +262,8 @@ void check_connections(Packet *p) {
           it->second.get_flowlastseen();
     }
 
-    /* Assuming a default timeout value of 120 sec. */
-    if (time_difference > 120000000) {
+    // Connection is considered expired after 1 min of silence
+    if (time_difference > 60000000) {
       ml_mutex.lock();
 
       /* Iterator pointing to the soon-to-be timeouted connection. */
@@ -333,7 +334,7 @@ std::vector<std::string> get_id_candidates(Packet *p) {
 //-------------------------------------------------------------------------
 
 static const Parameter ml_params[] = {
-    {"key", Parameter::PT_SELECT,
+    {"classifier_type", Parameter::PT_SELECT,
      "ddos | sql | infiltration | botnet | bruteforce", "ddos",
      "machine learning classifier"},
     {nullptr, Parameter::PT_MAX, nullptr, nullptr, nullptr}};
@@ -355,7 +356,7 @@ public:
 
 bool MLClassifiersModule::set(const char *, Value &v, SnortConfig *) {
   LogMessage("[*] MLClassifiersModule::set\n");
-  LogMessage("[*] Key: ");
+  LogMessage("[*] classifier_type: ");
   LogMessage("%s", v.get_string());
   LogMessage("\n");
 

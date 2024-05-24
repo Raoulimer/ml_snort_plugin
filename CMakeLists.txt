@@ -1,22 +1,18 @@
-cmake_minimum_required ( VERSION 3.4.3 )
+cmake_minimum_required ( VERSION 3.5 )
 project ( ml_classifiers CXX )
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-#set (CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/home/angaja/mlsnort/boost_1_67_0/")
+
 set(PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_compile_definitions(PROJECT_ROOT_DIR="${PROJECT_ROOT_DIR}")
-#set (CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/python3.7")
-
-if ( APPLE )
-    set ( CMAKE_MACOSX_RPATH OFF )
-endif ( APPLE )
 
 include ( FindPkgConfig )
 pkg_search_module ( SNORT3 REQUIRED snort>=3 )
+#Unfortunately neither scikit-learn nor xgboost provide pkg-config support. Neither of them seem to be aware of CMAKE either
 
 add_library (
     ml_classifiers MODULE
@@ -26,13 +22,6 @@ add_library (
     src/featureExtraction/connection.cc
 )
 
-if ( APPLE )
-    set_target_properties (
-        ml_classifiers
-        PROPERTIES
-            LINK_FLAGS "-undefined dynamic_lookup"
-    )
-endif ( APPLE )
 
 set_target_properties (
     ml_classifiers
@@ -40,10 +29,9 @@ set_target_properties (
         PREFIX ""
 )
 
-find_package ( Python3 COMPONENTS Interpreter Development )
-if ( Python3_FOUND )
-    find_package ( Boost COMPONENTS python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR} )
-endif ( Python3_FOUND )
+find_package ( Python3 REQUIRED COMPONENTS Interpreter Development )
+find_package ( Boost COMPONENTS python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR} )
+
 
 message ( "[*] PYTHON_LIBRARY_DIRS: ${Python3_LIBRARY_DIRS}" )
 message ( "[*] PYTHON_LIBRARIES: ${Python3_LIBRARIES}" )
