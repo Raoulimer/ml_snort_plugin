@@ -23,8 +23,8 @@
 //--------------------------------------------------------------------------
 
 // My headers
-#include "../../include/ml_classifiers.h"
-#include "../featureExtraction/connection.h"
+#include "include/ml_classifiers.h"
+#include "src/featureExtraction/connection.h"
 
 // Stuff from Cisco that every inspector uses
 #include "detection/detection_engine.h"
@@ -40,6 +40,7 @@
 // Utility
 #include <boost/python.hpp>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -55,6 +56,9 @@
 // GLOBAL
 //-------------------------------------------------------------------------
 using namespace snort;
+
+std::string root_dir = std::string(PROJECT_ROOT_DIR);
+// std::cout << "Debug corepath" << root_dir;
 
 static const char *s_name = "ml_classifiers";
 static const char *s_help = "machine learning classifiers";
@@ -137,9 +141,9 @@ void MLClassifiers::eval(Packet *p) {
 
 void createOutputStream() {
   std::ofstream outputFile;
-  outputFile.open(
-      "/home/angaja/privateRepo/ml_classifiers/tmp/timeouted_connections.txt",
-      std::ios_base::trunc);
+
+  outputFile.open(root_dir + "/tmp/timeouted_connections.txt",
+                  std::ios_base::trunc);
 
   for (int i = 0; i < t_connections.id.size(); i++) {
     outputFile << std::fixed << std::setprecision(9);
@@ -157,15 +161,13 @@ void createOutputStream() {
 }
 
 void transformOutputStream() {
-  std::string py_cmd2 = "python "
-                        "/home/angaja/privateRepo/ml_classifiers/src/"
-                        "python-utility/csvTransforer.py";
-  system(py_cmd2.c_str());
+  std::string py_cmd =
+      "python " + root_dir + "/src/python-utility/csvTransforer.py";
+  system(py_cmd.c_str());
 }
 
 void printClassifiedConnections(std::string attackName) {
-  std::ifstream inputFile("/home/angaja/privateRepo/ml_classifiers/tmp/"
-                          "timeouted_connections_results" +
+  std::ifstream inputFile(root_dir + "/tmp/timeouted_connections_results" +
                           attackName + ".txt");
 
   if (inputFile.is_open()) {
@@ -202,11 +204,10 @@ void classify_connections() {
     classificationThreads.emplace_back([attack]() {
       std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
 
-      std::string py_cmd = "python "
-                           "/home/angaja/privateRepo/ml_classifiers/src/"
-                           "machineLearning/ml_models/"
-                           "IntrusionModelNetworkPredictor.py " +
-                           attack;
+      std::string py_cmd =
+          "python " + root_dir +
+          "/src/machineLearning/ml_models/IntrusionModelNetworkPredictor.py " +
+          attack;
       system(py_cmd.c_str());
 
       std::cout << "Debug: Continuing execution after calling " + attack +
