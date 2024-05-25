@@ -1,34 +1,67 @@
 # ml_classifiers
+
 **ml_classifiers** is a Snort 3 Machine Learning-based Inspector for Network Traffic Bi-directional Flow Classification.
 
-Forked from Inutimuras Version. 
-
 Aim is to adapt for usage with models trained on the CIC IDS 2018 dataset.
-Uses Multithreading in order to run multiple attack-type specific models at once
+Uses Multithreading in order to run multiple attack-type specific models at once.
 
-NOTE THAT connection.cc /connection.h are not MY ORIGINAL CODE.
-Its taked from Inutimuras ml_classifiers plugin, although I took the liberty of moving the implementation of functions into a dedicated sourcefile
+**NOTE:** `connection.cc` and `connection.h` are NOT MY ORIGINAL CODE. They are taken from Inutimura's `ml_classifiers` plugin, although I refactored the code and separated it into header and source files.
 
-Currently Extractable Features:
+Here is a barebones description of how to use the plugin and train additional classifiers. For a more detailed explanation on what the individual scripts do, please refer to the paper (to be attached).
 
-  Destination Port, Flow Duration, Total Fwd Packets, Total Backward
-  Packets,Total Length of Fwd Packets, Total Length of Bwd Packets, Fwd
-  Packet Length Max, Fwd Packet Length Min, Fwd Packet Length Mean, Fwd
-  Packet Length Std, Bwd Packet Length Max, Bwd Packet Length Min, Bwd
-  Packet Length Mean, Bwd Packet Length Std,Flow Bytes/s, Flow Packets/s,
-  Flow IAT Mean, Flow IAT Std, Flow IAT Max, Flow IAT Min,Fwd IAT Total,
-  Fwd IAT Mean, Fwd IAT Std, Fwd IAT Max, Fwd IAT Min, Bwd IAT Total, Bwd
-  IAT Mean, Bwd IAT Std, Bwd IAT Max, Bwd IAT Min,Fwd PSH Flags, Bwd PSH
-  Flags, Fwd URG Flags, Bwd URG Flags, Fwd Header Length, Bwd Header
-  Length,Fwd Packets/s, Bwd Packets/s, Min Packet Length, Max Packet
-  Length, Packet Length Mean, Packet Length Std, Packet Length Variance,FIN
-  Flag Count, SYN Flag Count, RST Flag Count, PSH Flag Count, ACK Flag
-  Count, URG Flag Count, CWE Flag Count, ECE Flag Count, Down/Up Ratio,
-  Average Packet Size, Avg Fwd Segment Size, Avg Bwd Segment Size, Fwd
-  Header Length,Fwd Avg Bytes/Bulk, Fwd Avg Packets/Bulk, Fwd Avg Bulk
-  Rate, Bwd Avg Bytes/Bulk, Bwd Avg Packets/Bulk, Bwd Avg Bulk Rate,Subflow
-  Fwd Packets, Subflow Fwd Bytes, Subflow Bwd Packets, Subflow Bwd
-  Bytes,Init_Win_bytes_forward, Init_Win_bytes_backward, act_data_pkt_fwd,
-  min_seg_size_forward,Active Mean, Active Std, Active Max, Active Min,Idle
-  Mean, Idle Std, Idle Max, Idle Min, Label
-  
+## Table of Contents
+
+- [How to Build and Run the Plugin](#how-to-build-and-run-the-plugin)
+- [How to Train Machine Learning Classifiers](#how-to-train-machine-learning-classifiers)
+- [How to Test the Plugin (Dockerfile)](#how-to-test-the-plugin-dockerfile)
+
+## How to Build and Run the Plugin
+
+Create a build directory in the project's root directory and proceed like with any other CMake build:
+```console
+~ mkdir build; cd build
+~ cmake ..
+```
+You can also run `make` normally, but for faster build times use multiple jobs:
+```console
+~ make -j $(nproc)
+```
+Run `make install` as the root user:
+```console
+# make install
+```
+Add the plugin to your `snort.lua` in order to activate it:
+```console
+# echo "ml_classifiers = {"XGB"}" >> /etc/snort/snort.lua.
+```
+Specify the location of the plugin directory you installed the plugin in. You will need to replace the network interface and rule file paths according to your needs. What matters here is the plugin path:
+```console
+# snort -c /etc/snort/snort.lua -R /etc/snort/rules/local.rules \
+        -i enp24s0 --plugin-path /usr/local/snort/lib/snort/plugins/alternative  \
+        --daq-dir /usr/lib/daq/ -A none
+```
+
+## How to Train Machine Learning Classifiers
+
+From the project root directory, navigate to the following directory and run the fetch script (you might need to make it executable):
+```console
+~ cd src/machineLearning/originalData; ./fetchscript.sh
+```
+Navigate to the data-preproc directory, run the cleaning script:
+```console
+~ cd ../data-preproc/ ; python dataCleaner.py
+```
+Navigate to the cleanedData directory, run the grouping script:
+```console
+~ cd cleanedData ; python attackTypedFormatter.py
+```
+Navigate to the ml-training-data directory, run the training script:
+```console
+~ cd ../../ 
+~ python attackTypedFormatter.py <classifier_type> <attack_type> <save/test>
+```
+
+## How to Test the Plugin (Dockerfile)
+
+I still need to add instructions for this.
+
