@@ -1,51 +1,77 @@
 FROM archlinux:latest
 
-# Create a new user named 'builder'
-
-
-
 # Update the system and install necessary packages
 RUN pacman -Syu --noconfirm && \
-  pacman -S --noconfirm sudo base-devel git net-tools; exit
+  pacman -S --noconfirm sudo base-devel git net-tools go boost python-scikit-learn openssh wget; exit
 
 
-
+#Adding our user
 RUN useradd -m builder
-
 RUN echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN echo -n 'builder:1234' | chpasswd
 
-RUN pacman -S go --noconfirm 
-
-# Switch to the new user
 USER builder
 
 WORKDIR /home/builder
-# Set environment variables for makepkg directories
+
+# Setting environment variables for makepkg directories
 ENV BUILDDIR=/home/builder/snort/build
 ENV PKGDEST=/home/builder/snort/packages
 ENV SRCDEST=/home/builder/snort/sources
 ENV SRCPKGDEST=/home/builder/snort/srcpackages
 ENV LOGDEST=/home/builder/snort/logs
-# Clone the Snort repository and install it
 
 
+#Im doing this with an AUR Helper to make the Dockerfile shorter, 
+#avoiding manually building all of snorts depdencies (not all of them have binary packages)
 RUN git clone https://aur.archlinux.org/yay.git
-
 RUN cd yay; makepkg -si --noconfirm
 
-RUN yay -S snort --answerclean N --answerdiff N --noconfirm 
+#Installing snort from the AUR 
+RUN yay -S snort --answerclean N --answerdiff N --noconfirm ;
 
-# Switch back to the root user
 USER root
 
-# Optionally, clean up the build files
-RUN rm -rf /tmp/snort-build
+# Installs XGBoost and tensforflow depdencies
+# Adapted from https://linuxhandbook.com/dockerize-python-apps/
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+  && mkdir /root/.conda \
+  && bash Miniconda3-latest-Linux-x86_64.sh -b \
+  && rm -f Miniconda3-latest-Linux-x86_64.sh \
+  && echo "Running $(conda --version)" && \
+  conda init bash && \
+  . /root/.bashrc && \
+  conda update conda && \
+  conda create -n testenv && \
+  conda activate testenv && \
+  conda install python=3.6 xgboost
 
+
+#RUN echo -n 'builder:1234' | chpasswd
+
+
+# Enable Password Authentication for the ssh server, increase the amount of tries before user lockout and setup the ssh daemon
+RUN ssh-keygen -A
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config; sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/# deny = 3/deny = 1000000000000000/' /etc/security/faillock.conf
+RUN mkdir /var/run/sshd
+
+# Set up the working directory for a very simple HTTP server
+RUN mkdir myserver; cd myserver; touch superSecretFile;
+
+# Installing the plugin:
+# Note: We need to make install as root cause we're installing to /usr/<path>
 USER builder
-
 COPY . /home/builder/myplugin
-
 USER root
-RUN pacman -S boost --noconfirm
-RUN cd myplugin/build; rm -rf *; cmake ..; make; make install
+RUN cd /home/builder/myplugin/build; rm -rf *; cmake ..; make; make install;
+
+#Creating a startup script that starts the ssh daemon and the python http server
+RUN echo $'#!/bin/bash\n/usr/bin/sshd\ncd myserver\npython -m http.server 8000 &' > startupscript.sh && chmod +x startupscript.sh
+CMD ["/bin/bash", "-c", "./startupscript.sh && /bin/bash "]
+
+
+
 

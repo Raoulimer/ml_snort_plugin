@@ -14,6 +14,8 @@ Here is a barebones description of how to use the plugin and train additional cl
 - [How to Build and Run the Plugin](#how-to-build-and-run-the-plugin)
 - [How to Train Machine Learning Classifiers](#how-to-train-machine-learning-classifiers)
 - [How to Test the Plugin (Dockerfile)](#how-to-test-the-plugin-dockerfile)
+    - [Attacking the Services](#attacking-the-services)
+
 
 ## How to Build and Run the Plugin
 
@@ -63,5 +65,29 @@ Navigate to the ml-training-data directory, run the training script:
 
 ## How to Test the Plugin (Dockerfile)
 
-I still need to add instructions for this.
+> **Note:** Unfortunately, `makepkg` (specifically `fakeroot`) seems to be VERY slow when running in a Docker container, so the build time is substantial. Note that the base image is Arch, so you will not have access to the APT package manager.
+> If you want to install additional packages, you can use `pacman` or the `yay` AUR helper.
+
+You can build from the Dockerfile by running the following command in the projects root directory (feel free to change the naming):
+```console
+~ docker build -t Raoulimer/ml_snort_plugin:1.0
+```
+Run the container:
+```console
+~ docker build -t Raoulimer/ml_snort_plugin:1.0
+
+```
+> **WARNING:** `--net=host` will cause the Docker container to use the network stack of the host it is running on. **THIS IS INHERENTLY UNSAFE!** I only recommend using the container for **TESTING** the plugin.
+>
+
+The image should be configured to have a python http server running on port 8000 and an ssh daemon running on port 22.
+Since the detection model doesn't rely source/destination IPs for Classification you can use some of the provided attack-scripts in 
+the test/AttackMethods directory (to be added).
+
+To the rest of the network it will appear as if the services of the docker container are running on its host. You can of course also use your own attack scripts and attack the services from a different machine.
+
+
+
+### Attacking the services
+I still need to add the attack-scripts
 
