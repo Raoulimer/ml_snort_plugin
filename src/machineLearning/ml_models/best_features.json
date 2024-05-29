@@ -1,0 +1,62 @@
+{
+    "ddos": [
+        "Dst Port",
+        "TotLen Fwd Pkts",
+        "Fwd Pkt Len Max",
+        "Fwd Pkt Len Mean",
+        "Bwd Pkt Len Max",
+        "Fwd IAT Min",
+        "Fwd Header Len",
+        "Fwd Seg Size Avg",
+        "Subflow Fwd Bytes",
+        "Init_Win_bytes_forward"
+    ],
+    "botnet": [
+        "Dst Port",
+        "Flow Duration",
+        "Flow Pkts/s",
+        "Flow IAT Mean",
+        "Flow IAT Max",
+        "Fwd IAT Total",
+        "Fwd IAT Mean",
+        "Fwd IAT Max",
+        "Fwd IAT Min",
+        "Fwd Pkts/s"
+    ],
+    "infiltration": [
+        "Dst Port",
+        "Flow IAT Max",
+        "Fwd IAT Total",
+        "Fwd IAT Max",
+        "Bwd IAT Total",
+        "Bwd IAT Max",
+        "Fwd Header Len",
+        "Init_Win_bytes_forward",
+        "min_seg_size_forward",
+        "Idle Max"
+    ],
+    "sql": [
+        "Dst Port",
+        "Flow IAT Min",
+        "Fwd IAT Total",
+        "Fwd IAT Mean",
+        "Fwd IAT Min",
+        "PSH Flag Count",
+        "ACK Flag Count",
+        "Down/Up Ratio",
+        "Init_Win_bytes_forward",
+        "min_seg_size_forward"
+    ],
+    "bruteforce": [
+        "Dst Port",
+        "Flow Duration",
+        "Flow IAT Mean",
+        "Fwd Header Len",
+        "Bwd Header Len",
+        "Fwd Pkts/s",
+        "Bwd Pkts/s",
+        "Init_Win_bytes_forward",
+        "Init_Win_bytes_backward",
+        "min_seg_size_forward"
+    ]
+}

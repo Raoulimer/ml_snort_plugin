@@ -5,7 +5,7 @@ import sys
 import os
 from xgboost import XGBClassifier
 from sklearn.preprocessing import MinMaxScaler
-
+import json
 
 if len(sys.argv) < 2:
     print("Usage: python IntrusionModelNetworkPredictor.py <option>")
@@ -20,76 +20,11 @@ currdir = os.path.dirname(__file__)
 rel_path_to_tmp = os.path.join(currdir, "../../../tmp/")
 
 
+# IS faster than dynamically loading during execution!
 def setBestfeatures(option):
-    if option == "ddos":
-        best_features = [
-            "Dst Port",
-            "TotLen Fwd Pkts",
-            "Fwd Pkt Len Max",
-            "Fwd Pkt Len Mean",
-            "Bwd Pkt Len Max",
-            "Fwd IAT Min",
-            "Fwd Header Len",
-            "Fwd Seg Size Avg",
-            "Subflow Fwd Bytes",
-            "Init_Win_bytes_forward",
-        ]
-    elif option == "botnet":
-        best_features = [
-            "Dst Port",
-            "Flow Duration",
-            "Flow Pkts/s",
-            "Flow IAT Mean",
-            "Flow IAT Max",
-            "Fwd IAT Total",
-            "Fwd IAT Mean",
-            "Fwd IAT Max",
-            "Fwd IAT Min",
-            "Fwd Pkts/s",
-        ]
-    elif option == "infiltration":  # NOT USING NEURAL NETWORK NOT SET
-        best_features = [
-            "Dst Port",
-            "Flow IAT Max",
-            "Fwd IAT Total",
-            "Fwd IAT Max",
-            "Bwd IAT Total",
-            "Bwd IAT Max",
-            "Fwd Header Len",
-            "Init_Win_bytes_forward",
-            "min_seg_size_forward",
-            "Idle Max",
-        ]
-    elif option == "sql":  # NOT USING NEURAL NETWORK
-        best_features = [
-            "Dst Port",  # This should be Protocol
-            "Flow IAT Min",
-            "Fwd IAT Total",
-            "Fwd IAT Mean",
-            "Fwd IAT Min",
-            "PSH Flag Count",
-            "ACK Flag Count",
-            "Down/Up Ratio",
-            "Init_Win_bytes_forward",
-            "min_seg_size_forward",
-        ]
-    elif option == "bruteforce":
-        best_features = [
-            "Dst Port",
-            "Flow Duration",
-            "Flow IAT Mean",
-            "Fwd Header Len",
-            "Bwd Header Len",
-            "Fwd Pkts/s",
-            "Bwd Pkts/s",
-            "Init_Win_bytes_forward",
-            "Init_Win_bytes_backward",
-            "min_seg_size_forward",
-        ]
-    else:
-        best_features = []
-
-    return best_features
+    with open(os.path.join(currdir, "best_features.json"), "r") as file:
+        config = json.load(file)
+    return config.get(option, [])
 
 
 # Step 1: Load the pre-trained model

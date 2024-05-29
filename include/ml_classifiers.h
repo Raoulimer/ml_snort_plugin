@@ -19,11 +19,11 @@ using namespace boost::accumulators;
 
 // Core Plugin Functions
 std::vector<std::string> get_id_candidates(Packet *p);
-void verify_timeouts();
-void check_connections(Packet *p);
+void checkConnectionsScheduler();
+void detect_expired_connections(Packet *p);
 
 // ML Classification Functions
 void createOutputStream();
 void transformOutputStream();
 void printClassifiedConnections(std::string attackName);
-void classify_connections();
+void classify_expired_connections();

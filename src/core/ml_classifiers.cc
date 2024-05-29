@@ -24,6 +24,7 @@
 
 // My headers
 #include "include/ml_classifiers.h"
+#include "framework/parameter.h"
 #include "src/featureExtraction/connection.h"
 
 // Stuff from Cisco that every inspector uses
@@ -40,6 +41,7 @@
 // Utility
 #include <boost/python.hpp>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -58,7 +60,6 @@
 using namespace snort;
 
 std::string root_dir = std::string(PROJECT_ROOT_DIR);
-// std::cout << "Debug corepath" << root_dir;
 
 static const char *s_name = "ml_classifiers";
 static const char *s_help = "machine learning classifiers";
@@ -67,10 +68,10 @@ std::mutex ml_mutex;
 static THREAD_LOCAL ProfileStats ml_PerfStats;
 static THREAD_LOCAL SimpleStats ml_stats;
 
-/* Selected Machine Learning Technique. */
-std::string attack_type;
-
-/* Map of current active connections.*/
+// Selected classifier type
+std::string classifier_type;
+float certaintythresh;
+// Currently active (not expired) connections
 std::map<std::string, Connection> connections;
 std::map<std::string, Connection>::iterator connections_it;
 
@@ -81,6 +82,7 @@ TimeoutedConnections t_connections;
 //-------------------------------------------------------------------------
 
 class MLClassifiers : public Inspector {
+private:
 public:
   MLClassifiers();
 
@@ -90,17 +92,17 @@ public:
 };
 
 MLClassifiers::MLClassifiers() {
-  LogMessage("[*] MLClassifiers::MLClassifiers()\n");
+  LogMessage("[Info:] MLClassifiers::MLClassifiers()\n");
 }
 
 bool MLClassifiers::configure(SnortConfig *) {
-  std::thread verify_thread(verify_timeouts);
+  std::thread verify_thread(checkConnectionsScheduler);
   verify_thread.detach();
   return true;
 }
 
 void MLClassifiers::show(const SnortConfig *) const {
-  LogMessage("[*] MLClassifers::show\n");
+  LogMessage("[Info:] MLClassifers::show\n");
 }
 
 void MLClassifiers::eval(Packet *p) {
@@ -140,38 +142,57 @@ void MLClassifiers::eval(Packet *p) {
 //-------------------------------------------------------------------------
 
 void createOutputStream() {
-  std::ofstream outputFile;
-
-  outputFile.open(root_dir + "/tmp/timeouted_connections.txt",
-                  std::ios_base::trunc);
-
-  for (int connectionNr = 0; connectionNr < t_connections.id.size();
-       connectionNr++) {
-    outputFile << std::fixed << std::setprecision(9);
-
-    for (int featureNr = 0; featureNr < 78; featureNr++) {
-      outputFile << t_connections.features[connectionNr][featureNr];
-
-      if (featureNr == 77)
-        outputFile << std::scientific << "\n";
-      else
-        outputFile << " ";
+  std::string filepath_output = root_dir + "/tmp/timeouted_connections.txt";
+  std::ofstream outputFile(filepath_output, std::ios::trunc);
+  try {
+    if (!outputFile.is_open()) {
+      throw std::runtime_error("Unable to open output file: " +
+                               filepath_output);
     }
+
+    if (t_connections.features.empty()) {
+      throw std::runtime_error("The features vector is empty.");
+    }
+    int num_of_features = 77;
+    for (int connectionNr = 0; connectionNr < t_connections.id.size();
+         connectionNr++) {
+      outputFile << std::fixed << std::setprecision(9);
+
+      for (int featureID = 0; featureID <= num_of_features; featureID++) {
+        outputFile << t_connections.features[connectionNr][featureID];
+
+        if (featureID == num_of_features)
+          outputFile << std::scientific << "\n";
+        else
+          outputFile << " ";
+      }
+    }
+    outputFile.close();
+  } catch (const std::runtime_error &e) {
+    std::cerr << "Runtime error: " << e.what() << std::endl;
   }
-  outputFile.close();
 }
 
 void transformOutputStream() {
-  std::string py_cmd =
+  std::string transform_cmd =
       "python " + root_dir + "/src/python-utility/csvTransforer.py";
-  system(py_cmd.c_str());
+
+  int exit_status = system(transform_cmd.c_str());
+  if (exit_status != 0) {
+    std::cerr << "Error: Command failed with error code " << exit_status
+              << std::endl;
+  }
 }
 
 void printClassifiedConnections(std::string attackName) {
-  std::ifstream inputFile(root_dir + "/tmp/timeouted_connections_results" +
-                          attackName + ".txt");
+  try {
+    std::string filepath_input =
+        root_dir + "/tmp/timeouted_connections_results" + attackName + ".txt";
+    std::ifstream inputFile(filepath_input);
 
-  if (inputFile.is_open()) {
+    if (!inputFile.is_open()) {
+      throw std::runtime_error("Unable to open input file: " + filepath_input);
+    }
     std::string line;
     uint32_t index = 0;
 
@@ -180,8 +201,9 @@ void printClassifiedConnections(std::string attackName) {
       std::istringstream iss(line);
       iss >> predictedValue;
 
-      if (predictedValue >= 0.90f) {
-        std::cout << "[-] ML-Classified: " << t_connections.id[index]
+      std::cout << "Debug" << certaintythresh;
+      if (predictedValue >= certaintythresh) {
+        std::cout << "[!] ML-Classified: " << t_connections.id[index]
                   << "\tResult: " << "Attack (" << predictedValue << ") - "
                   << attackName << std::endl;
       }
@@ -190,10 +212,13 @@ void printClassifiedConnections(std::string attackName) {
     }
 
     inputFile.close();
+
+  } catch (const std::runtime_error &e) {
+    std::cerr << "Runtime error: " << e.what() << std::endl;
   }
 }
 
-void classify_connections() {
+void classify_expired_connections() {
   createOutputStream();
   transformOutputStream();
 
@@ -205,11 +230,11 @@ void classify_connections() {
     classificationThreads.emplace_back([attack]() {
       std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
 
-      std::string py_cmd =
+      std::string predict_cmd =
           "python " + root_dir +
           "/src/machineLearning/ml_models/IntrusionModelNetworkPredictor.py " +
           attack;
-      system(py_cmd.c_str());
+      system(predict_cmd.c_str());
 
       std::cout << "Debug: Continuing execution after calling " + attack +
                        " Classifier"
@@ -232,18 +257,18 @@ void classify_connections() {
 //-------------------------------------------------------------------------
 // Packet Inspection Core
 //-------------------------------------------------------------------------
-void verify_timeouts() {
+void checkConnectionsScheduler() {
   // Thread's run function. Runs every 20 sec.
   while (true) {
-    std::cout << "[+] verify_timeouts (" << connections.size() << ")"
+    std::cout << "[Info:] Open Connections(" << connections.size() << ")"
               << std::endl;
 
-    check_connections(nullptr);
+    detect_expired_connections(nullptr);
     std::this_thread::sleep_for(std::chrono::milliseconds(20000));
   }
 }
 
-void check_connections(Packet *p) {
+void detect_expired_connections(Packet *p) {
   // Checks for expired connections and classifies them
   ml_mutex.lock();
   std::map<std::string, Connection> active_connections = connections;
@@ -290,7 +315,7 @@ void check_connections(Packet *p) {
   // If timeouted connections have been added in this iteration we need to
   // classify them
   if (t_connections.id.size() > 0) {
-    classify_connections();
+    classify_expired_connections();
   }
 }
 
@@ -334,9 +359,10 @@ std::vector<std::string> get_id_candidates(Packet *p) {
 //-------------------------------------------------------------------------
 
 static const Parameter ml_params[] = {
-    {"classifier_type", Parameter::PT_SELECT,
-     "ddos | sql | infiltration | botnet | bruteforce", "ddos",
+    {"classifier_type", Parameter::PT_SELECT, "ddos | XGB | NN ", "XGB",
      "machine learning classifier"},
+    {"mal_threshold_perc", Parameter::PT_INT, "0:100", "90",
+     "how certain does the model need to be"},
     {nullptr, Parameter::PT_MAX, nullptr, nullptr, nullptr}};
 
 class MLClassifiersModule : public Module {
@@ -355,13 +381,21 @@ public:
 };
 
 bool MLClassifiersModule::set(const char *, Value &v, SnortConfig *) {
-  LogMessage("[*] MLClassifiersModule::set\n");
-  LogMessage("[*] classifier_type: ");
-  LogMessage("%s", v.get_string());
-  LogMessage("\n");
-
-  attack_type = v.get_string();
-  std::cout << attack_type << std::endl;
+  LogMessage("[Info:] MLClassifiersModule::set\n");
+  if (v.is("classifier_type")) {
+    classifier_type = v.get_string();
+    LogMessage("[*] classifier_type: ");
+    LogMessage("%s", v.get_string());
+    LogMessage("\n");
+    std::cout << classifier_type << std::endl;
+  }
+  if (v.is("mal_threshold_perc")) {
+    certaintythresh = v.get_uint16() / 100.0;
+    LogMessage("[*] mal_threshold_perc: ");
+    LogMessage("%s", v.get_string());
+    LogMessage("\n");
+    std::cout << certaintythresh << std::endl;
+  }
 
   return true;
 }
