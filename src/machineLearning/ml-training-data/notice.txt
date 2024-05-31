@@ -1,2 +1,0 @@
-Due to file size limits, the model training data cannot be made availible on github. 
-These will be hosted elsewhere and a download link should be made availible soon

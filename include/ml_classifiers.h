@@ -18,7 +18,7 @@ using namespace snort;
 using namespace boost::accumulators;
 
 // Core Plugin Functions
-std::vector<std::string> get_id_candidates(Packet *p);
+std::string caclulate_flowID(Packet *p);
 void checkConnectionsScheduler();
 void detect_expired_connections(Packet *p);
 
@@ -27,3 +27,5 @@ void createOutputStream();
 void transformOutputStream();
 void printClassifiedConnections(std::string attackName);
 void classify_expired_connections();
+
+void delete_expired_connections();
