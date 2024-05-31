@@ -17,8 +17,9 @@
 using namespace snort;
 
 //-------------------------------------------------------------------------
-// Connection Implementation
-//------
+// Connection Implementation -
+//-------------------------------------------------------------------------
+
 Connection::Connection(Packet *p, std::string id) {
   bool setlog = false;
   if (setlog) {

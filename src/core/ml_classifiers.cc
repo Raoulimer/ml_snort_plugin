@@ -15,11 +15,11 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //--------------------------------------------------------------------------
-// Connections.cc inspired by Luan Utimura's ml_classifiers
-// <luan.utimura@gmail.com> which seems to be inspired by the CICFLOWMETER
-// Source Code
+// Connections.cc + Snippets in ml_classifiers.cc inspired by Luan Utimura's
+// ml_classifiers <luan.utimura@gmail.com> which seems to be inspired by the
+// CICFLOWMETER Source Code
 //--------------------------------------------------------------------------
-// Everything else from Raoul Frank <raoul.ilja.frank@protonmail.com>
+// The rest : <raoul.ilja.frank@protonmail.com>
 //--------------------------------------------------------------------------
 
 // My headers
@@ -73,11 +73,9 @@ std::string classifier_type;
 float certaintythresh;
 int tt_expired;
 int iteration_interval;
-// Currently active (not expired) connections
-std::map<std::string, Connection> connections;
-std::map<std::string, Connection>::iterator connections_it;
 
-// Expired connections
+// Currently active and expired connections
+std::map<std::string, Connection> connections;
 TimeoutedConnections expired_connections;
 
 //-------------------------------------------------------------------------
@@ -116,9 +114,6 @@ void MLClassifiers::eval(Packet *p) {
   if (is_valid_packet) {
     std::string id_candidates = caclulate_flowID(p);
 
-    // Attempts to find an existent connection with the flow_id equals to
-    // forward ISS
-
     // Check if matching packet was found and add it or create a new one
     if (connections.find(id_candidates) != connections.end()) {
       connections.find(id_candidates)->second.add_packet(p);
@@ -131,8 +126,130 @@ void MLClassifiers::eval(Packet *p) {
   }
   ++ml_stats.total_packets;
 }
+
 //-------------------------------------------------------------------------
-// Machine Learning Classification and Alerts
+// Packet Inspection Core
+//-------------------------------------------------------------------------
+void checkConnectionsScheduler() {
+  // Repetition can be sepcified via iteration_interval
+  // in snort.lua (in seconds). The code saves the iteration_interval (seconds)
+  // from the config file as milliseconds
+  while (true) {
+    int remaining_time = iteration_interval; // Convert milliseconds to seconds
+    while (remaining_time > 0) {
+      std::cout << "\r\033[K[Info:] Open Connections(" << connections.size()
+                << ")" << " - Checking again in: " << remaining_time
+                << " seconds" << std::flush; // Flush to ensure immediate output
+      std::this_thread::sleep_for(
+          std::chrono::seconds(1)); // Sleep for 1 second
+      remaining_time--;
+    }
+
+    detect_expired_connections(nullptr);
+  }
+}
+
+void detect_expired_connections(Packet *p) {
+
+  ml_mutex.lock();
+  std::map<std::string, Connection> active_connections = connections;
+  ml_mutex.unlock();
+
+  for (auto &connection : active_connections) {
+    int time_difference;
+
+    time_difference =
+        get_time_in_microseconds() - connection.second.get_flowlastseen();
+
+    // If connection has been silent for longer than tt_expired, which is
+    // configured in snort.lua, it is added to expired connections struct
+    if (time_difference > tt_expired) {
+      ml_mutex.lock();
+
+      // Iterator on the openConnections struct pointing to the current
+      // (expired) Connection
+      std::map<std::string, Connection>::iterator expiredConn_it =
+          connections.find(connection.first);
+
+      if (expiredConn_it != connections.end()) {
+        // Get the feature vector of the Connection
+        std::vector<double> feature_vector =
+            expiredConn_it->second.get_feature_vector();
+
+        // ADD connection to expired connections, remove from open connections
+        expired_connections.id.push_back(expiredConn_it->second.get_flowid());
+        expired_connections.features.push_back(feature_vector);
+        expired_connections.connections.push_back(expiredConn_it->second);
+        connections.erase(expiredConn_it);
+      }
+      ml_mutex.unlock();
+    }
+  }
+  // If timeouted connections have been added in this iteration we need to
+  // classify them
+  if (!expired_connections.id.empty()) {
+    classify_expired_connections();
+  }
+}
+
+void classify_expired_connections() {
+  createOutputStream();
+  transformOutputStream();
+
+  std::vector<std::thread> classificationThreads;
+  std::string attackTypes[] = {"ddos", "bruteforce", "botnet", "sql",
+                               "infiltration"};
+
+  for (const std::string &attack : attackTypes) {
+    classificationThreads.emplace_back([attack]() {
+      std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
+
+      std::string predict_cmd =
+          "python " + root_dir +
+          "/src/machineLearning/ml_models/IntrusionModelNetworkPredictor.py " +
+          attack;
+      system(predict_cmd.c_str());
+
+      printClassifiedConnections(attack);
+    });
+  }
+
+  for (auto &thread : classificationThreads) {
+    if (thread.joinable()) {
+      thread.join();
+    }
+  }
+
+  delete_expired_connections();
+}
+
+std::string caclulate_flowID(Packet *p) {
+
+  std::ostringstream iss;
+  p->is_tcp() ? iss << "TCP"
+              : (p->is_udp() ? iss << "UDP"
+                             : (p->is_icmp() ? iss << "ICMP" : iss << ""));
+
+  // Snippet from forked repo.
+  SfIpString client_ip, server_ip;
+  p->flow->client_ip.ntop(client_ip);
+  p->flow->server_ip.ntop(server_ip);
+  iss << "-" << client_ip << ":" << p->flow->client_port << "-" << server_ip
+      << ":" << p->flow->server_port;
+  if (p->is_icmp()) {
+    iss << "-" << p->ptrs.icmph->s_icmp_id;
+  }
+
+  return iss.str();
+}
+
+void delete_expired_connections() {
+  expired_connections.id.clear();
+  expired_connections.connections.clear();
+  expired_connections.features.clear();
+}
+//-------------------------------------------------------------------------
+// Utility Functions
 //-------------------------------------------------------------------------
 
 void createOutputStream() {
@@ -169,7 +286,7 @@ void createOutputStream() {
 
 void transformOutputStream() {
   std::string transform_cmd =
-      "python " + root_dir + "/src/python-utility/csvTransforer.py";
+      "python " + root_dir + "/src/utility/csvTransforer.py";
 
   int exit_status = system(transform_cmd.c_str());
   if (exit_status != 0) {
@@ -210,132 +327,6 @@ void printClassifiedConnections(std::string attackName) {
   }
 }
 
-void classify_expired_connections() {
-  createOutputStream();
-  transformOutputStream();
-
-  std::vector<std::thread> classificationThreads;
-  std::string attackTypes[] = {"ddos", "bruteforce", "botnet", "sql",
-                               "infiltration"};
-
-  for (const std::string &attack : attackTypes) {
-    classificationThreads.emplace_back([attack]() {
-      std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
-
-      std::string predict_cmd =
-          "python " + root_dir +
-          "/src/machineLearning/ml_models/IntrusionModelNetworkPredictor.py " +
-          attack;
-      system(predict_cmd.c_str());
-
-      std::cout << "Debug: Continuing execution after calling " + attack +
-                       " Classifier"
-                << std::endl;
-
-      printClassifiedConnections(attack);
-    });
-  }
-
-  for (auto &thread : classificationThreads) {
-    if (thread.joinable()) {
-      thread.join();
-    }
-  }
-
-  delete_expired_connections();
-}
-
-void delete_expired_connections() {
-  expired_connections.id.clear();
-  expired_connections.connections.clear();
-  expired_connections.features.clear();
-}
-//-------------------------------------------------------------------------
-// Packet Inspection Core
-//-------------------------------------------------------------------------
-void checkConnectionsScheduler() {
-  // Repetition can be sepcified via iteration_interval
-  // in snort.lua (in seconds). The code saves the iteration_interval (seconds)
-  // from the config file as milliseconds
-  while (true) {
-    int remaining_time = iteration_interval; // Convert milliseconds to seconds
-    while (remaining_time > 0) {
-      std::cout << "\r\033[K[Info:] Open Connections(" << connections.size()
-                << ")" << " - Checking again in: " << remaining_time
-                << " seconds" << std::flush; // Flush to ensure immediate output
-      std::this_thread::sleep_for(
-          std::chrono::seconds(1)); // Sleep for 1 second
-      remaining_time--;
-    }
-
-    detect_expired_connections(nullptr);
-  }
-}
-
-void detect_expired_connections(Packet *p) {
-
-  ml_mutex.lock();
-  std::map<std::string, Connection> active_connections = connections;
-  ml_mutex.unlock();
-
-  for (auto &connection : active_connections) {
-    int time_difference;
-
-    time_difference =
-        get_time_in_microseconds() - connection.second.get_flowlastseen();
-
-    // If connection has been silent for longer than tt_expired, which is
-    // configured in snort.lua the connection is added to expired connections
-    // struct
-    if (time_difference > tt_expired) {
-      ml_mutex.lock();
-
-      // Iterator on the openConnections struct pointing to the current
-      // (expired) Connection
-      std::map<std::string, Connection>::iterator expiredConn_it =
-          connections.find(connection.first);
-
-      if (expiredConn_it != connections.end()) {
-        // Get the feature vector of the Connection
-        std::vector<double> feature_vector =
-            expiredConn_it->second.get_feature_vector();
-
-        // ADD connection to expired connections struct and remove it the open
-        // connections
-        expired_connections.id.push_back(expiredConn_it->second.get_flowid());
-        expired_connections.features.push_back(feature_vector);
-        expired_connections.connections.push_back(expiredConn_it->second);
-        connections.erase(expiredConn_it);
-      }
-      ml_mutex.unlock();
-    }
-  }
-  // If timeouted connections have been added in this iteration we need to
-  // classify them
-  if (!expired_connections.id.empty()) {
-    classify_expired_connections();
-  }
-}
-
-std::string caclulate_flowID(Packet *p) {
-
-  std::ostringstream iss;
-  p->is_tcp() ? iss << "TCP"
-              : (p->is_udp() ? iss << "UDP"
-                             : (p->is_icmp() ? iss << "ICMP" : iss << ""));
-
-  // Snippet from forked repo.
-  SfIpString client_ip, server_ip;
-  p->flow->client_ip.ntop(client_ip);
-  p->flow->server_ip.ntop(server_ip);
-  iss << "-" << client_ip << ":" << p->flow->client_port << "-" << server_ip
-      << ":" << p->flow->server_port;
-  if (p->is_icmp()) {
-    iss << "-" << p->ptrs.icmph->s_icmp_id;
-  }
-
-  return iss.str();
-}
 //-------------------------------------------------------------------------
 // module stuff - Based of example Inspector provided by CISCO/Snort
 //-------------------------------------------------------------------------

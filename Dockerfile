@@ -2,7 +2,7 @@ FROM archlinux:latest
 
 # Update the system and install necessary packages
 RUN pacman -Syu --noconfirm && \
-  pacman -S --noconfirm sudo base-devel git net-tools go boost python-scikit-learn openssh wget python-pandas python-numpy; exit
+  pacman -S --noconfirm sudo base-devel git net-tools go boost openssh wget ; exit
 
 
 #Adding our user
@@ -46,7 +46,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
   conda update conda && \
   conda create -n testenv && \
   conda activate testenv && \
-  conda install python=3.6 xgboost
+  conda install python=3.12.2 xgboost=2.0.3 pandas=2.2.1 scikit-learn=1.4.2 numpy=1.26.4
 
 
 # Enable Password Authentication for the ssh server, increase the amount of tries before user lockout and setup the ssh daemon
@@ -64,7 +64,7 @@ USER builder
 COPY . /home/builder/myplugin
 USER root
 RUN cd /home/builder/myplugin/build; rm -rf *; cmake ..; make; make install;
-RUN echo "ml_classifiers={classifier_type="XGB", mal_threshold_perc=90 } " >> /etc/snort/snort.lua
+RUN echo "ml_classifiers={classifier_type="XGB", mal_threshold_perc=89, tt_expired=61, iteration_interval=19 }" >> /etc/snort/snort.lua
 
 #Creating a startup script that starts the ssh daemon and the python http server
 RUN echo $'#!/bin/bash\n/usr/bin/sshd\ncd myserver\npython -m http.server 8000 &' > startupscript.sh && chmod +x startupscript.sh
