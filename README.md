@@ -89,5 +89,26 @@ To the rest of the network it will appear as if the services of the docker conta
 
 
 ### Attacking the services
-I still need to add the attack-scripts
+> **Note:** While you can technically install the necessary packages required to run the scripts on any distro, I 
+> recommend you use kali for this, since a lot of them will be preinstalled. 
+
+**Infiltration:** 
+Prompts the user for the target operating system and creates a reverse TCP payload. 
+Also prompts the user for the  IP/port he wants to listen on and starts listening for incoming TCP connections. Requires on msfconsole/msfvenom
+```console
+~ ./infiltrationTestScript.sh
+```
+
+**DoS:** 
+The DoS Testscript uses the slowhttptest and goldenEye Packages. Since (during the time of creation), the goldeneye package from the kali-rolling mirror was bugged, you will need to clone it directly from the github repo and run the DoS script from the directory that you cloned it into. 
+```console
+~ ./dosTestScript.sh
+```
+**Bruteforce:** 
+Uses Patator and Hydra in order to attack a ssh server. The ssh configuration in the docker container purposefully allows for Password Authentication with a high number of retries. 
+The script prompts the user for a username, target-IP and wordlist path. (default username: builder)
+```console
+~ ./bruteforceTestScript.sh
+```
+
 
