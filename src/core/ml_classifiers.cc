@@ -60,7 +60,6 @@
 using namespace snort;
 
 std::string root_dir = std::string(PROJECT_ROOT_DIR);
-
 static const char *s_name = "ml_classifiers";
 static const char *s_help = "machine learning classifiers";
 
@@ -82,22 +81,13 @@ TimeoutedConnections expired_connections;
 // Inspector Inheritance
 //-------------------------------------------------------------------------
 
-class MLClassifiers : public Inspector {
-private:
-public:
-  MLClassifiers();
-
-  bool configure(SnortConfig *) override;
-  void show(const SnortConfig *) const override;
-  void eval(Packet *) override;
-};
-
 MLClassifiers::MLClassifiers() {
   LogMessage("[Info:] MLClassifiers::MLClassifiers()\n");
 }
 
 bool MLClassifiers::configure(SnortConfig *) {
-  std::thread verify_thread(checkConnectionsScheduler);
+  // std::thread verify_thread(checkConnectionsScheduler);
+  std::thread verify_thread(&MLClassifiers::checkConnectionsScheduler, this);
   verify_thread.detach();
   return true;
 }
@@ -130,7 +120,7 @@ void MLClassifiers::eval(Packet *p) {
 //-------------------------------------------------------------------------
 // Packet Inspection Core
 //-------------------------------------------------------------------------
-void checkConnectionsScheduler() {
+void MLClassifiers::checkConnectionsScheduler() {
   // Repetition can be sepcified via iteration_interval
   // in snort.lua (in seconds). The code saves the iteration_interval (seconds)
   // from the config file as milliseconds
@@ -149,7 +139,7 @@ void checkConnectionsScheduler() {
   }
 }
 
-void detect_expired_connections(Packet *p) {
+void MLClassifiers::detect_expired_connections(Packet *p) {
 
   ml_mutex.lock();
   std::map<std::string, Connection> active_connections = connections;
@@ -192,7 +182,7 @@ void detect_expired_connections(Packet *p) {
   }
 }
 
-void classify_expired_connections() {
+void MLClassifiers::classify_expired_connections() {
   createOutputStream();
   transformOutputStream();
 
@@ -223,7 +213,7 @@ void classify_expired_connections() {
   delete_expired_connections();
 }
 
-std::string caclulate_flowID(Packet *p) {
+std::string MLClassifiers::caclulate_flowID(Packet *p) {
 
   std::ostringstream iss;
   p->is_tcp() ? iss << "TCP"
@@ -243,7 +233,7 @@ std::string caclulate_flowID(Packet *p) {
   return iss.str();
 }
 
-void delete_expired_connections() {
+void MLClassifiers::delete_expired_connections() {
   expired_connections.id.clear();
   expired_connections.connections.clear();
   expired_connections.features.clear();

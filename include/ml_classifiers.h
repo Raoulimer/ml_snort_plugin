@@ -17,15 +17,24 @@
 using namespace snort;
 using namespace boost::accumulators;
 
-// Core Plugin Functions
-std::string caclulate_flowID(Packet *p);
-void checkConnectionsScheduler();
-void detect_expired_connections(Packet *p);
+class MLClassifiers : public Inspector {
+private:
+public:
+  MLClassifiers();
 
-// ML Classification Functions
+  bool configure(SnortConfig *) override;
+  void show(const SnortConfig *) const override;
+  void eval(Packet *) override;
+
+  // Core Plugin Functions
+  std::string caclulate_flowID(Packet *p);
+  void detect_expired_connections(Packet *p);
+  void classify_expired_connections();
+  void delete_expired_connections();
+  void checkConnectionsScheduler();
+};
+
+// Utility Functions
 void createOutputStream();
 void transformOutputStream();
 void printClassifiedConnections(std::string attackName);
-void classify_expired_connections();
-
-void delete_expired_connections();
