@@ -96,5 +96,8 @@ predictions.columns = [
     "Idle Max",
     "Idle Min",
 ]  # store dataframe into csv file
+
+# Doing the Scaling here would force us to scale ALL of the features --> SLOW!!
+
 predictions.to_csv(rel_path_to_tmp + "formattedExtractions.csv")
 print("Debug: finished transforming Expired Connection")

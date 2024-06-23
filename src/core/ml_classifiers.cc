@@ -192,12 +192,14 @@ void MLClassifiers::classify_expired_connections() {
 
   for (const std::string &attack : attackTypes) {
     classificationThreads.emplace_back([attack]() {
-      std::cout << "Debug: Calling " + attack + " Classifier" << std::endl;
+      std::cout << "Debug: Calling " + classifier_type + ": " + attack +
+                       " Classifier"
+                << std::endl;
 
       std::string predict_cmd =
           "python " + root_dir +
           "/src/machineLearning/ml_models/IntrusionModelNetworkPredictor.py " +
-          attack;
+          attack + " " + classifier_type;
       system(predict_cmd.c_str());
 
       printClassifiedConnections(attack);

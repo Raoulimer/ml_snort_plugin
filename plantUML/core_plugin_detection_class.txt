@@ -1,0 +1,87 @@
+@startuml
+!define THREAD_LOCAL <&thread_local>
+
+package "PythonPrograms"{
+class "csvTransformer"{}
+class "IntrusionModelNetworkPredictor"{}
+}
+
+ class "Global" {
+        + std::string root_dir
+        + const char *s_name
+        + const char *s_help
+        + std::mutex ml_mutex
+        + THREAD_LOCAL ProfileStats ml_PerfStats
+        + THREAD_LOCAL SimpleStats ml_stats
+        + std::string classifier_type
+        + float certaintythresh
+        + int tt_expired
+        + int iteration_interval
+        + std::map<std::string, Connection> connections
+        + TimeoutedConnections expired_connections
+        + void createOutputStream()
+        + void transformOutputStream()
+        + void printClassifiedConnections(std::string attackName)
+
+    }
+
+package "MLClassifiers" {
+    class Inspector {
+        <<abstract>>
+        +bool configure(SnortConfig *)
+        +void show(const SnortConfig *) const
+        +void eval(Packet *)
+    }
+
+    class MLClassifiers {
+        + MLClassifiers()
+        + bool configure(SnortConfig *) override
+        + void show(const SnortConfig *) const override
+        + void eval(Packet *) override
+        + void checkConnectionsScheduler()
+        + void detect_expired_connections(Packet *)
+        + void classify_expired_connections()
+        + std::string caclulate_flowID(Packet *)
+        + void delete_expired_connections()
+    }
+    MLClassifiers --|> Inspector
+}
+
+
+
+package "Module" {
+    class Module {
+        <<abstract>>
+        + const PegInfo *get_pegs() const
+        + PegCount *get_counts() const
+        + ProfileStats *get_profile() const
+        + bool set(const char *, Value &v, SnortConfig *)
+        + Usage get_usage() const
+    }
+
+    class MLClassifiersModule {
+        + MLClassifiersModule()
+        + const PegInfo *get_pegs() const override
+        + PegCount *get_counts() const override
+        + ProfileStats *get_profile() const override
+        + bool set(const char *, Value &v, SnortConfig *) override
+        + Usage get_usage() const override
+    }
+    MLClassifiersModule --|> Module
+}
+
+package "API"{
+    class InspectApi {
+        + mod_ctor()
+        + mod_dtor(Module *m)
+        + ml_ctor(Module *m)
+        + ml_dtor(Inspector *p)
+    }
+}
+
+
+MLClassifiers ..> PythonPrograms : calls
+MLClassifiers ..> Global : uses
+MLClassifiers ..> Global : calls
+MLClassifiersModule ..> Global : uses
+@enduml

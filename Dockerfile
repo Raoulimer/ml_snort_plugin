@@ -46,14 +46,14 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
   conda update conda && \
   conda create -n testenv && \
   conda activate testenv && \
-  conda install python=3.12.2 xgboost=2.0.3 pandas=2.2.1 scikit-learn=1.4.2 numpy=1.26.4
-
+  conda install python=3.12.2 xgboost=2.0.3 pandas=2.2.1 scikit-learn=1.4.2 numpy=1.26.4 && \
+  pip install tensorflow==2.16.1 
 
 # Enable Password Authentication for the ssh server, increase the amount of tries before user lockout and setup the ssh daemon
 RUN ssh-keygen -A
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config; sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN sed -i 's/# deny = 3/deny = 1000000000000000/' /etc/security/faillock.conf
-RUN mkdir /var/run/sshd
+RUN mkdir -p /var/run/sshd
 
 # Set up the working directory for a very simple HTTP server
 RUN mkdir myserver; cd myserver; touch superSecretFile;

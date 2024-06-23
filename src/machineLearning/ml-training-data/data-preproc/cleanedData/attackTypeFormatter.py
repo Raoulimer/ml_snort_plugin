@@ -66,14 +66,14 @@ def load_and_concatenate_data(option):
     return data
 
 
-# Check if option is provided from command line
+
 if len(sys.argv) < 2:
     print("Usage: python attackTypeFormatter.py <option>")
     sys.exit(1)
 
 option = sys.argv[1]
 
-# Load and concatenate data based on option
+
 data = load_and_concatenate_data(option)
 
 instances_label_0 = data.query("Label == 0")
