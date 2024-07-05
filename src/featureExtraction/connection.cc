@@ -1,4 +1,8 @@
-
+//--------------------------------------------------------------------------
+// I cleaned this up a bit, but the logic here is written by
+// <luan.utimura@gmail.com> and seems to be inspired by the
+// CICFLOWMETER Source Code
+//--------------------------------------------------------------------------
 #include "connection.h"
 
 #include "detection/detection_engine.h"

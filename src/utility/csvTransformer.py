@@ -1,17 +1,14 @@
-# importing pandas library
 import pandas as pd
 import os
 
-# reading given csv file
-# and creating dataframe
-os.system("pwd")
+
 currdir = os.path.dirname(__file__)
 rel_path_to_tmp = os.path.join(currdir, "../../tmp/")
-print("Debug", rel_path_to_tmp + "timeouted_connections.txt")
+print("Debug", rel_path_to_tmp + "expired_connections.txt")
 
 # This path is necessary since this script is being called from the ml_models directory
 predictions = pd.read_csv(
-    rel_path_to_tmp + "timeouted_connections.txt",
+    rel_path_to_tmp + "expired_connections.txt",
     header=None,
     delimiter=" ",
 )

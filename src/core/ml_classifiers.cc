@@ -15,6 +15,8 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //--------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------
 // Connections.cc + Snippets in ml_classifiers.cc inspired by Luan Utimura's
 // ml_classifiers <luan.utimura@gmail.com> which seems to be inspired by the
 // CICFLOWMETER Source Code
@@ -42,7 +44,6 @@
 #include <boost/python.hpp>
 #include <chrono>
 #include <cstdint>
-#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -52,6 +53,7 @@
 // Multithreading
 #include <mutex>
 #include <ostream>
+#include <string>
 #include <thread>
 
 //-------------------------------------------------------------------------
@@ -73,7 +75,9 @@ float certaintythresh;
 int tt_expired;
 int iteration_interval;
 
-// Currently active and expired connections
+// Currently active and expired connections.
+// The term "Timeouted" is a remnant from Inutimuras Code in Connections.h
+// I dont want to change the name, since I dont want to hide my reliance on it
 std::map<std::string, Connection> connections;
 TimeoutedConnections expired_connections;
 
@@ -86,7 +90,6 @@ MLClassifiers::MLClassifiers() {
 }
 
 bool MLClassifiers::configure(SnortConfig *) {
-  // std::thread verify_thread(checkConnectionsScheduler);
   std::thread verify_thread(&MLClassifiers::checkConnectionsScheduler, this);
   verify_thread.detach();
   return true;
@@ -102,16 +105,15 @@ void MLClassifiers::eval(Packet *p) {
       (p->is_tcp() || p->is_udp() || p->is_icmp()) && p->flow;
 
   if (is_valid_packet) {
-    std::string id_candidates = caclulate_flowID(p);
+    std::string flow_id = caclulate_flowID(p);
 
-    // Check if matching packet was found and add it or create a new one
-    if (connections.find(id_candidates) != connections.end()) {
-      connections.find(id_candidates)->second.add_packet(p);
+    // If matching Connection found, append packet else create a new Connection
+    if (connections.find(flow_id) != connections.end()) {
+      connections.find(flow_id)->second.add_packet(p);
     } else {
-      //
-      Connection newConnection(p, id_candidates);
+      Connection newConnection(p, flow_id);
       connections.insert(
-          std::pair<std::string, Connection>(id_candidates, newConnection));
+          std::pair<std::string, Connection>(flow_id, newConnection));
     }
   }
   ++ml_stats.total_packets;
@@ -121,17 +123,15 @@ void MLClassifiers::eval(Packet *p) {
 // Packet Inspection Core
 //-------------------------------------------------------------------------
 void MLClassifiers::checkConnectionsScheduler() {
-  // Repetition can be sepcified via iteration_interval
-  // in snort.lua (in seconds). The code saves the iteration_interval (seconds)
-  // from the config file as milliseconds
+  // Freuquency can be sepcified via iteration_interval parameter
+  // in snort.lua (in seconds).
   while (true) {
-    int remaining_time = iteration_interval; // Convert milliseconds to seconds
+    int remaining_time = iteration_interval;
     while (remaining_time > 0) {
       std::cout << "\r\033[K[Info:] Open Connections(" << connections.size()
                 << ")" << " - Checking again in: " << remaining_time
                 << " seconds" << std::flush; // Flush to ensure immediate output
-      std::this_thread::sleep_for(
-          std::chrono::seconds(1)); // Sleep for 1 second
+      std::this_thread::sleep_for(std::chrono::seconds(1));
       remaining_time--;
     }
 
@@ -142,27 +142,26 @@ void MLClassifiers::checkConnectionsScheduler() {
 void MLClassifiers::detect_expired_connections(Packet *p) {
 
   ml_mutex.lock();
-  std::map<std::string, Connection> active_connections = connections;
+  std::map<std::string, Connection> active_connections_snapshot = connections;
   ml_mutex.unlock();
 
-  for (auto &connection : active_connections) {
-    int time_difference;
+  for (auto &connection : active_connections_snapshot) {
 
-    time_difference =
+    int time_difference =
         get_time_in_microseconds() - connection.second.get_flowlastseen();
 
-    // If connection has been silent for longer than tt_expired, which is
-    // configured in snort.lua, it is added to expired connections struct
+    // If connection has been silent for longer than x seconds, it is added to
+    // expired connections struct. Amount of seconds are definable in snort.lua
+    // via the tt_expired parameter
     if (time_difference > tt_expired) {
       ml_mutex.lock();
 
-      // Iterator on the openConnections struct pointing to the current
-      // (expired) Connection
       std::map<std::string, Connection>::iterator expiredConn_it =
           connections.find(connection.first);
 
+      // Assert if expired conenction is still in open connections struct
       if (expiredConn_it != connections.end()) {
-        // Get the feature vector of the Connection
+
         std::vector<double> feature_vector =
             expiredConn_it->second.get_feature_vector();
 
@@ -175,64 +174,86 @@ void MLClassifiers::detect_expired_connections(Packet *p) {
       ml_mutex.unlock();
     }
   }
-  // If timeouted connections have been added in this iteration we need to
-  // classify them
+  // If new connections have been added to the expired connections struct in
+  // this iteration we need to classify them
   if (!expired_connections.id.empty()) {
     classify_expired_connections();
   }
 }
 
 void MLClassifiers::classify_expired_connections() {
+  // Dump this iterations' expired connections onto a file and format it
   createOutputStream();
   transformOutputStream();
 
+  // Call Attack type specific detection models to classify the flows from file
   std::vector<std::thread> classificationThreads;
   std::string attackTypes[] = {"ddos", "bruteforce", "botnet", "sql",
                                "infiltration"};
 
-  for (const std::string &attack : attackTypes) {
-    classificationThreads.emplace_back([attack]() {
-      std::cout << "Debug: Calling " + classifier_type + ": " + attack +
-                       " Classifier"
-                << std::endl;
-
-      std::string predict_cmd =
-          "python " + root_dir +
-          "/src/machineLearning/ml_models/IntrusionModelNetworkPredictor.py " +
-          attack + " " + classifier_type;
-      system(predict_cmd.c_str());
-
-      printClassifiedConnections(attack);
-    });
-  }
-
-  for (auto &thread : classificationThreads) {
-    if (thread.joinable()) {
-      thread.join();
+  // keras is not thread-safe hence it needs to run sequentially
+  if (classifier_type == "NN") {
+    callFlowClassifier("all");
+  } else {
+    for (const std::string &attack : attackTypes) {
+      classificationThreads.emplace_back(
+          [this, attack]() { callFlowClassifier(attack); });
+    }
+    for (auto &thread : classificationThreads) {
+      if (thread.joinable()) {
+        thread.join();
+      }
     }
   }
 
+  // Print
+  // Now print classified connections for each attack type
+  for (const std::string &attack : attackTypes) {
+    printClassifiedConnections(attack);
+  }
+
+  // Clear this iterations' output file as not to reclassify the same flows in
+  // the next iteration
   delete_expired_connections();
+}
+
+void MLClassifiers::callFlowClassifier(std::string attack) {
+  std::cout << "Calling " + classifier_type + ": " + attack + " Classifier"
+            << std::endl;
+
+  std::string predict_cmd =
+      "python " + root_dir +
+      "/src/machineLearning/ml_models/FlowClassifier.py " + attack + " " +
+      classifier_type;
+
+  int exit_status = system(predict_cmd.c_str());
+  if (exit_status != 0) {
+    std::cerr << "Error: ML Classification for" << attack
+              << " failed with error code " << exit_status << std::endl;
+  }
 }
 
 std::string MLClassifiers::caclulate_flowID(Packet *p) {
 
-  std::ostringstream iss;
-  p->is_tcp() ? iss << "TCP"
-              : (p->is_udp() ? iss << "UDP"
-                             : (p->is_icmp() ? iss << "ICMP" : iss << ""));
+  std::ostringstream packet_summary;
+  p->is_tcp() ? packet_summary << "TCP"
+              : (p->is_udp() ? packet_summary << "UDP"
+                             : (p->is_icmp() ? packet_summary << "ICMP"
+                                             : packet_summary << ""));
 
   // Snippet from forked repo.
   SfIpString client_ip, server_ip;
   p->flow->client_ip.ntop(client_ip);
   p->flow->server_ip.ntop(server_ip);
-  iss << "-" << client_ip << ":" << p->flow->client_port << "-" << server_ip
-      << ":" << p->flow->server_port;
+  packet_summary << "-" << client_ip << ":" << p->flow->client_port << "-"
+                 << server_ip << ":" << p->flow->server_port;
+
+  // Adds additional info for ICMP packets
   if (p->is_icmp()) {
-    iss << "-" << p->ptrs.icmph->s_icmp_id;
+    packet_summary << "-" << p->ptrs.icmph->s_icmp_id;
   }
 
-  return iss.str();
+  return packet_summary.str();
 }
 
 void MLClassifiers::delete_expired_connections() {
@@ -245,7 +266,7 @@ void MLClassifiers::delete_expired_connections() {
 //-------------------------------------------------------------------------
 
 void createOutputStream() {
-  std::string filepath_output = root_dir + "/tmp/timeouted_connections.txt";
+  std::string filepath_output = root_dir + "/tmp/expired_connections.txt";
   std::ofstream outputFile(filepath_output, std::ios::trunc);
   try {
     if (!outputFile.is_open()) {
@@ -254,8 +275,11 @@ void createOutputStream() {
     }
 
     if (expired_connections.features.empty()) {
-      throw std::runtime_error("The features vector is empty.");
+      throw std::runtime_error("The feature vector is empty.");
     }
+
+    // Iterate through each expired Connections' feature-vector and
+    // write features to Outputfile. Nested forloop is inefficient but necessary
     int num_of_features = 77;
     for (int connectionNr = 0; connectionNr < expired_connections.id.size();
          connectionNr++) {
@@ -278,19 +302,21 @@ void createOutputStream() {
 
 void transformOutputStream() {
   std::string transform_cmd =
-      "python " + root_dir + "/src/utility/csvTransforer.py";
+      "python " + root_dir + "/src/utility/csvTransformer.py";
 
   int exit_status = system(transform_cmd.c_str());
   if (exit_status != 0) {
-    std::cerr << "Error: Command failed with error code " << exit_status
-              << std::endl;
+    std::cerr << "Error: Outputfile Formatter failed with error code "
+              << exit_status << std::endl;
   }
 }
 
 void printClassifiedConnections(std::string attackName) {
+  // Logic responsible for builtin Alerts. Prints the classified (malicious)
+  // flows to the terminal
   try {
     std::string filepath_input =
-        root_dir + "/tmp/timeouted_connections_results" + attackName + ".txt";
+        root_dir + "/tmp/expired_connections_results" + attackName + ".txt";
     std::ifstream inputFile(filepath_input);
 
     if (!inputFile.is_open()) {
@@ -305,7 +331,7 @@ void printClassifiedConnections(std::string attackName) {
       iss >> predictedValue;
 
       if (predictedValue >= certaintythresh) {
-        std::cout << "[!] ML-Classified: " << expired_connections.id[index]
+        std::cout << "[!] Classified: " << expired_connections.id[index]
                   << "\tResult: " << "Attack (" << predictedValue << ") - "
                   << attackName << std::endl;
       }
@@ -323,7 +349,8 @@ void printClassifiedConnections(std::string attackName) {
 // module stuff - Based of example Inspector provided by CISCO/Snort
 //-------------------------------------------------------------------------
 
-static const Parameter ml_params[] = {
+// Defines user configurable params
+static const Parameter plugin_params[] = {
     {"classifier_type", Parameter::PT_SELECT, " XGB | NN ", "XGB",
      "machine learning classifier"},
     {"mal_threshold_perc", Parameter::PT_INT, "0:100", "90",
@@ -336,7 +363,7 @@ static const Parameter ml_params[] = {
 
 class MLClassifiersModule : public Module {
 public:
-  MLClassifiersModule() : Module(s_name, s_help, ml_params) {}
+  MLClassifiersModule() : Module(s_name, s_help, plugin_params) {}
 
   const PegInfo *get_pegs() const override { return simple_pegs; }
 
@@ -349,6 +376,7 @@ public:
   Usage get_usage() const override { return INSPECT; }
 };
 
+// Sets all Parameters which can be set by the user in Snort.conf
 bool MLClassifiersModule::set(const char *, Value &v, SnortConfig *) {
   LogMessage("[Info:] MLClassifiersModule::set\n");
   if (v.is("classifier_type")) {

@@ -2,7 +2,6 @@
 
 #include <string>
 #include <sys/time.h>
-#include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/count.hpp>
@@ -30,6 +29,7 @@ public:
   std::string caclulate_flowID(Packet *p);
   void detect_expired_connections(Packet *p);
   void classify_expired_connections();
+  void callFlowClassifier(std::string classifier_type);
   void delete_expired_connections();
   void checkConnectionsScheduler();
 };

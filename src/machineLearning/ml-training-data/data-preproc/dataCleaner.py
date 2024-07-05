@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 import sys
 
+# How to use the Script
+if len(sys.argv) < 2:
+    print("Usage: python dataCleaner.py <dayNr>")
+    sys.exit(1)
+
 
 dayNr = sys.argv[1]
 if dayNr not in ["1", "2", "3", "5", "6", "7", "8", "9", "10"]:
@@ -9,9 +14,9 @@ if dayNr not in ["1", "2", "3", "5", "6", "7", "8", "9", "10"]:
     sys.exit(1)
 
 
-day = pd.read_csv("OriginalDirtyDay{}.csv".format(dayNr))
+day = pd.read_csv("../originalData/OriginalDirtyDay{}.csv".format(dayNr))
 
-# AI generated line, but it basically just removes rows for which the entry is the (repeated) column name
+# Removes rows for which the entry is the (repeated) column name
 day.drop(day.loc[day["Label"] == "Label"].index, inplace=True)
 
 
@@ -36,7 +41,7 @@ day.drop(columns=uninformative_columns, inplace=True)
 # Index the attack types
 day.replace(to_replace="Benign", value=0, inplace=True)
 day.replace(to_replace="Bot", value=1, inplace=True)
-day.replace(to_replace="Brute(Force|force)", value=2, inplace=True, regex=True)
+day.replace(to_replace="Brute(Force|force| Force).+", value=2, inplace=True, regex=True)
 day.replace(to_replace="DoS attacks-.+", value=3, inplace=True, regex=True)
 day.replace(to_replace="DDOS attack-.+", value=3, inplace=True, regex=True)
 day.replace(to_replace="Infilteration", value=4, inplace=True)

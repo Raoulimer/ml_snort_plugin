@@ -1,26 +1,35 @@
 @startuml
 actor User
-
+entity network
 participant "Core Plugin (C++)"
 participant "csv Transformer (python)"
 participant "Predictor (python)"
-participant "best_features (json)"
 participant SnortLogger
+database "best_features (json)"
 
+database CurrentFlows
 database ExpiredFlows
 database classifiedFlows
 database ML_models
 User -> "Core Plugin (C++)" : configure(SnortConfig *)
-"Core Plugin (C++)" -> "Core Plugin (C++)" : Extract features & append to feature vector
-"Core Plugin (C++)" -> ExpiredFlows : Output extracted features in a list
+network -> "Core Plugin (C++)" : Incoming Packet
+
+"Core Plugin (C++)" -> "CurrentFlows" : Extract features and add to Current Flows
+
+loop "Called every x seconds"
+"Core Plugin (C++)" -> "CurrentFlows" : Check if any flows expired
+
+alt "new expired flows detected"
+"Core Plugin (C++)" -> "CurrentFlows" : Remove ExpiredFlows
+"Core Plugin (C++)" -> ExpiredFlows : Save ExpiredFlows
 
 "Core Plugin (C++)" -> "csv Transformer (python)" : Calls 
 ExpiredFlows -> "csv Transformer (python)" : Provides list for formatting
-activate "Core Plugin (C++)"
+ExpiredFlows <- "csv Transformer (python)" : Save [formatted] expired flows
 
-alt "new expired flows detected"
 par
   "Core Plugin (C++)" -> "Predictor (python)" : Calls Predictor with different start Params for each attack-type
+  ExpiredFlows -> "Predictor (python)" : Loads fromatted flows
   "Predictor (python)" <- "best_features (json)" : loads appropriate feature vector
   "Predictor (python)"-> "Predictor (python)" : performs Data preprocessing
   ML_models-> "Predictor (python)" : loads appropriate ML model
@@ -29,5 +38,5 @@ end
 "Predictor (python)" ->  "Core Plugin (C++)" : All threads have finished
   "Core Plugin (C++)" <- classifiedFlows : Reads classified flows
   "Core Plugin (C++)" -> SnortLogger : Outputs classified flows
-deactivate "Core Plugin (C++)"
+end
 end

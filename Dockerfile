@@ -64,7 +64,7 @@ USER builder
 COPY . /home/builder/myplugin
 USER root
 RUN cd /home/builder/myplugin/build; rm -rf *; cmake ..; make; make install;
-RUN echo "ml_classifiers={classifier_type="XGB", mal_threshold_perc=89, tt_expired=61, iteration_interval=19 }" >> /etc/snort/snort.lua
+RUN echo "ml_classifiers={classifier_type='NN', mal_threshold_perc=89, tt_expired=30, iteration_interval=19 }" >> /etc/snort/snort.lua
 
 #Creating a startup script that starts the ssh daemon and the python http server
 RUN echo $'#!/bin/bash\n/usr/bin/sshd\ncd myserver\npython -m http.server 8000 &' > startupscript.sh && chmod +x startupscript.sh

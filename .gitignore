@@ -1,2 +1,7 @@
 build/
-
+/src/machineLearning/ml-training-data/data-preproc/cleanedData/*
+!/src/machineLearning/ml-training-data/data-preproc/cleanedData/attackTypeFormatter.py
+/src/machineLearning/ml-training-data/originalData/*
+!/src/machineLearning/ml-training-data/originalData/fetchScript.sh
+/src/machineLearning/ml-training-data/data-preproc/cleanedData/fullyFormattedData/*
+!/src/machineLearning/ml-training-data/data-preproc/cleanedData/fullyFormattedData/notice.txt

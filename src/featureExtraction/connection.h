@@ -1,3 +1,8 @@
+//--------------------------------------------------------------------------
+// I cleaned this up a bit, but the logic here is written by
+// <luan.utimura@gmail.com> and seems to be inspired by the
+// CICFLOWMETER Source Code
+//--------------------------------------------------------------------------
 #include <boost/python.hpp>
 
 #include <cstdlib>
@@ -324,7 +329,7 @@ struct TimeoutedConnections {
 };
 
 //-------------------------------------------------------------------------
-// Utility FUNCTIONS MOVE THESE!!!
+// Utility FUNCTIONS
 //-------------------------------------------------------------------------
 
 inline int64_t get_time_in_microseconds() {

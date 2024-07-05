@@ -3,30 +3,22 @@ import os.path
 import sys
 import pandas as pd
 from pandas._config.config import is_nonnegative_int
+
+
+# Show dependency errors due to pecuiliarities in the import. They work fine
 import tensorflow as tf
+import xgboost as xgb
 
 from sklearn.model_selection import train_test_split
-from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.utils.class_weight import compute_class_weight
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.feature_selection import (
-    chi2,
-    f_classif,
     mutual_info_classif,
-    RFE,
-    SelectFromModel,
     SelectKBest,
 )
 
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-
-# FIX this dependency!
-import xgboost as xgb
-
+# How to use the Script
 if len(sys.argv) < 4:
     print("Usage: python MLTraining.py <classifier_type> <attack_type> <save/test> ")
     sys.exit(1)
@@ -49,8 +41,7 @@ if shouldSave not in ["save", "test"]:
     sys.exit(1)
 
 
-# Load the CSV files using pandas
-
+# Fetching the Training Data
 combined_df = pd.read_csv(
     "data-preproc/cleanedData/fullyFormattedData/{}Days.csv".format(option),
     skip_blank_lines=True,
@@ -58,8 +49,7 @@ combined_df = pd.read_csv(
 )
 
 for part_df in combined_df:
-    x_df2 = part_df.drop(columns="Label")
-    x_df = x_df2.drop(columns="Date")
+    x_df = part_df.drop(columns="Label")
 
     y_df = part_df["Label"]
     y = y_df.values
@@ -71,6 +61,7 @@ for part_df in combined_df:
     print("EvilPercent:\t", (y_df.value_counts()[[1]].sum() * 100) / x_df.shape[0])
     # x_df.info()
 
+    # This is technically redudant as the Cleaning Script already does it.
     x_df.replace([np.inf, -np.inf], np.nan, inplace=True)
     max_finite_value = np.nanmax(x_df.values)
     x_df.fillna(max_finite_value, inplace=True)
