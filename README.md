@@ -44,8 +44,9 @@ Specify the location of the plugin directory you installed the plugin in. You wi
         --daq-dir /usr/lib/daq/ -A none
 ```
 
-**ALTERNATIVE: Use the provided Runscript and Dockerfile**
-In order to make running the plugin  easier I provided a [Dockerfile](#how-to-run-the-plugin-dockerfile) and a runscript (test/snortRunScript.sh)
+**ALTERNATIVE: Use the provided Runscript and Dockerfile.**
+
+In order to make running the plugin  easier I provided a [Dockerfile](#how-to-run-the-plugin-dockerfile) and a runscript (test/snortRunScript.sh).
 The runscript will prompt you for parameters you want to use (they also have sensible defaults).
 
 
@@ -73,7 +74,7 @@ You can build from the Dockerfile by running the following command in the projec
 ```
 
 **Run  Snort:**
-In order to make running the plugin even easier without forcing you to edit the configuration file at all, I  provided a little runscript.
+In order to make running the plugin even easier (without having to touch the configuration file), I  provided a little runscript.
 ```console
 # ./test/snortRunScript.sh
 ```
@@ -82,19 +83,19 @@ In order to make running the plugin even easier without forcing you to edit the 
 
 
 ## Attacking the Services
-The image should be configured to have a python http server running on port 8000 and an ssh daemon running on port 22. To the rest of the network it will appear as if the services of the docker container are running on its host. You can of course also use your own attack scripts.
+The image should be configured to have a python http server running on port 8000 and an ssh daemon running on port 22. To the rest of the network it will appear as if the services of the docker container are running on the baremetal host. You can of course also use your own attack scripts.
 
 > **Note:** While you can technically install the necessary packages required to run the scripts on any distro, I 
 > recommend you use kali for this, since a lot of them will be preinstalled. You might need to make the scripts executable first using chmod +x
 
 **Bruteforce:** 
 Uses Patator and Hydra in order to attack a ssh server. The ssh configuration in the docker container purposefully allows for Password Authentication with a high number of retries. 
-The script prompts the user for a username, target-IP and wordlist path. (default username: builder)
+The script prompts the user for a username, target-IP and wordlist path. (use the username: builder)
 ```console
 ~ ./bruteforceTestScript.sh
 ```
 **DoS:** 
-The DoS Testscript uses the slowhttptest and goldenEye Packages. Since (during the time of creation), the goldeneye package from the kali-rolling mirror was bugged, you will need to clone it directly from the github repo and run the DoS script from the directory that you cloned it into. 
+The DoS Testscript uses the slowhttptest and goldenEye Packages. Since (during the time of creation), the goldeneye package from the kali-rolling mirror was bugged, you will need to clone it directly from the github repo in order to satisfy the dependency.
 ```console
 ~ ./dosTestScript.sh
 ```
@@ -114,14 +115,14 @@ From the project root directory, navigate to the following directory and run the
 ```
 Navigate to the data-preproc directory, run the **cleaning** script:
 ```console
-~ cd ../data-preproc/ ; python dataCleaner.py
+~ cd ../data-preproc/ ; python dataCleaner.py <dayNr>
 ```
 Navigate to the cleanedData directory, run the **grouping** script:
 ```console
-~ cd cleanedData ; python attackTypedFormatter.py
+~ cd cleanedData ; python attackTypeFormatter.py <attack_type>
 ```
 Navigate to the ml-training-data directory, run the **training** script:
 ```console
 ~ cd ../../ 
-~ python attackTypedFormatter.py <classifier_type> <attack_type> <save/test>
+~ python ModelTraining.py <classifier_type> <attack_type> <save/test>
 ```
