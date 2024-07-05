@@ -67,6 +67,11 @@ You can build from the Dockerfile by running the following command in the projec
 > **WARNING:** `--net=host` will cause the Docker container to use the network stack of the host it is running on. **THIS IS INHERENTLY UNSAFE!** I only recommend using the container for **TESTING** the plugin.
 >
 
+**Activate the Environment:**
+```console
+~ conda activate testenv
+```
+
 **Run  Snort:**
 In order to make running the plugin even easier without forcing you to edit the configuration file at all, I  provided a little runscript.
 ```console

@@ -41,6 +41,7 @@ package "MLClassifiers" {
         + void checkConnectionsScheduler()
         + void detect_expired_connections(Packet *)
         + void classify_expired_connections()
+        + void callFlowClassifier()
         + std::string caclulate_flowID(Packet *)
         + void delete_expired_connections()
     }

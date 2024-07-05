@@ -1,0 +1,301 @@
+commit be084d01e61c80c206f79814bdebaca4948d59dc
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri Jul 5 03:03:18 2024 +0200
+
+    Major Refactoring for Readability. Made Nerual Network Classification sequential since it it not thread safe. XGB is still parallel. Updated Readme and attack-scripts to make them more easily usable. Also added a runscript for snort, so users dont have to spec all of the options manually.
+
+commit 3b8e30be7d517f1604c409e87b69f742210892d9
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun Jun 23 19:29:39 2024 +0200
+
+    Added tensorflow dependencies to Dockerfile, integrated Neural Network support to the plugin
+
+commit 7af2026f6214dd8f32c89870e238f76979363570
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun Jun 16 02:22:38 2024 +0200
+
+    Made Core inspection global function into Member functions of the Machine learning Inspector
+
+commit ede2e4014ad476bc947c8dc6f2510a45cb5565af
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Tue Jun 11 03:36:21 2024 +0200
+
+    Added attack-scripts for Infiltration/DoS/bruteforce attack types. Updated the readme to include instructions on how to use them
+
+commit 4e41fdd7b2b005434ff65b6b635422f053c1c424
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 31 23:04:28 2024 +0200
+
+    Fixed dependency issues in the dockerfile by upgrading to newer package versions for python, xgboost and scikit-learn
+
+commit 5f24f5737afbbd6065518843a6985b9d3800611b
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 31 19:35:31 2024 +0200
+
+    Added new parameters to the inspector module. Time after which a packet is considered expired as well as the time after which the plugin checks for new expired packets are now user-configurable in the snort.lua configuration file.
+    Also did some refactoring on some of the core classification functions in order to make them more readable. Also now there is a countdown for the iteration function, making the output look a bit nicer. Removed never used logic inherited from the forked repo
+
+commit 1ec5af00b064aa1e34225df599c2b85c13dcc844
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Wed May 29 16:14:39 2024 +0200
+
+    Moved hardcoded features for Traffic Prediction from the Prediction script into a separate JSON file. Added mal_threshold_perc as a configurable parameter. Now the user can define how certain he wants the model to be, before it calssifies flows as malicious. Also did some minor class renaming in the ml_classifiers source and header files. Finally I updated the Dockerfile so it configures the new parameters in its snort.lua file
+
+commit 83a3b1de7160b54003b37abc8ecbb69c35e4cc17
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Mon May 27 03:05:17 2024 +0200
+
+    Updated the Dockerfile to include necesseray dependencies. Also set it up to start a ssh daemon and a python server which can subsequently be attacked. Updated readme to include setup instructions
+
+commit 263eeb2a9e36a7377f015927163938a1024c2e06
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 26 01:53:55 2024 +0200
+
+    Added the Data cleaning Script. Functionality for removing Infinite and NaN values needs to be removed from the training Script, since that is now already handled by the cleaning script
+
+commit 37aa01f2ae22d1bcd0e7dd74000881f02923b2bb
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sat May 25 17:28:46 2024 +0200
+
+    Updated Readme to include usage instructions
+
+commit 42b17fc690d97c52a27eecc386258d0374ea1387
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 24 17:02:40 2024 +0200
+
+    Updated CMakeLists.txt. Removed OSX support, raised minimum CMake Version to 3.5 in order to avoid deprecation warnings. Also reduced the time after which a connection is considered expired from 2 minutes to 1 minute
+
+commit 00b7e5d9f421424364c1964a2bd7577a563659bd
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 24 02:27:08 2024 +0200
+
+    Moved up to C++ 17. Refactored the CMakeLists.txt to define a project root directory macro using the CMAKE_CURRENT_SOURCE_DIR variable. This allows me to replace hardcoded file paths with the project root directory macro. This should make the code more portable
+
+commit 49ff51f28c39cec068f058f36010ee7a4d01804a
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 24 00:51:54 2024 +0200
+
+    Added placeholder for dataCleaner script. Made absolute path handling more robust for csvTransformer.py and IntrusionModelNetworkPredictor.py via os.path.dirname (these really need new names). Since these two scripts can be called by the core plugin this makes sense. I didnt add this functionality to the ML Training Scripts since these would normally be launched from the directory they are in. (Might add later)
+
+commit 2700089a845db720c2d3f23b766438b3fb439a0f
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Wed May 22 23:44:33 2024 +0200
+
+    Removed paths to files outside of the project directory from the machine Learning scripts. XGB and NN Training scripts have been merged into ModelTraining.py. The type of Model to be trained can be selected via Arguments passed by the user. Also added a fetchscript which retrieves the Original csv's from CIC's AWS bucket and renames them for further processing. Some changes to the directory structure have been made in order to accommodate the upcoming addition of the data cleaning script. Also removed some legacy jupyter-notebooks from the forked repo, which are no longer needed
+
+commit 02d73d15769438677c11a817b74c7775f48cb52c
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Mon May 20 00:39:05 2024 +0200
+
+    Added Dockerfile based on the archlinux base image. That allows us to use the AUR which makes installing snort with its many depdendencies a bit easier. For now it only copies the project contents and doesnt build them. The installation is also kind of slow due to the fakeroot environment not really being the fastest thing to use within a container. After polishing the Dockerfile a bit, I will push the DockerImage it creates to Dockerhub and provide a link which can be used to pull it
+
+commit 982569fa0010a9d05e03b0938256d6bd819c57c2
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 20:05:42 2024 +0200
+
+    Fixed insecure logging function for the Inspector Module
+
+commit 9b79772889bf560784f303c8e844d2e76db89294
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 19:59:41 2024 +0200
+
+    Major Refactoring Undertaken. Project directory structure should now be a bit more conventional and easier to navigate. CMakeLists was updated, the new directories should however still be included via CMAKE IncludePATH, so I dont have to use relative paths in my include statements.
+
+commit ec103422a58207b7c36db1b44f8d2ad49cb36d18
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 19:12:17 2024 +0200
+
+    Created a new tmp directory with a dedicated gitignore, perserving the directory structure but pushing any of the files within tmp
+
+commit a31b8d07f8a96eb962f1f415772a57ce2c21119b
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 19:01:38 2024 +0200
+
+    Removed tmp directory from Cache
+
+commit e4c6c3fa6e4b0916089b49ee8a4dee1456ec9faa
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 18:59:58 2024 +0200
+
+    Updated gitignore to (hopefully) ignore changes to all files within the tmp directory
+
+commit 23450435a3d514bbbb87438ebae3a4d614594b6c
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 18:46:04 2024 +0200
+
+    Minor Refactoring: Added additional contact information and removed unused imports from legacy code
+
+commit c92e47d14e733e06bfcd69d5a72ddbc21dedabed
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 18:29:54 2024 +0200
+
+    Moved the entire Feature Extraction logic into its own header and source files and updated the CMakeLists so everything still compiles as usual. As a result the Classfication Class is now a lot leaner
+
+commit 751aa05cc4510d8c14bc5e6c86e1d0d51cbefe7b
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sun May 19 00:14:34 2024 +0200
+
+    Major Refactoring Undertaken. All of the legacy code that has been implemented right in the headerfile has now been split up. Apart from getter definitions the headerfile now only contains function declarations with all of the aforementioned functions being implemented in the cc file. Recompiling should be faster from now on. The next logical step would be further splitting the project into multiple files, since the singular project header/source file is getting bloated. The generous commenting of imho obvious functions has also been trimmed
+
+commit 9371be71a0d2445b905456d8c477bf313a6b3f2f
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sat May 18 22:08:45 2024 +0200
+
+    Added tmp directory to gitignore
+
+commit fc9cc0919ce340688560869828827983e28ef0e5
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sat May 18 22:04:04 2024 +0200
+
+    Improved Performance by parallelizing the classification of traffic by the different attack detection models. Right now this is implemented very caveman-like using threads. If the amount of code that has to be parallelized grows, a switch to openMP might make sense
+
+commit 4d6c34087d76abfe3071f17af35a4a2fa10a9896
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Sat May 18 00:30:26 2024 +0200
+
+    Added Debugging Messages and fixed an undiscovered race condition from Initumuras Original repo. I did this by added a mutex to the entire eval Packet function. This needs to be optimized since the synchronization overhead is killing the performance, but at least for now the program is stable and doesnt have random segfaults
+
+commit 0272b486d9c31853328902a0db17abeb1e5982bb
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 17 19:00:18 2024 +0200
+
+    Gave each Classifier Type its own directory
+
+commit 0618f9b71ce7a2c9374acabdc1be21008aba97aa
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 17 18:46:47 2024 +0200
+
+    Remove build directory from repository
+
+commit 21b7ccb33e2a7978c04a03a30002d05e543ac41a
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 17 18:45:55 2024 +0200
+
+    Add build directory to .gitignore
+
+commit 13f7444a8626013c1de222665ec9aecf4efe1711
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 17 18:40:27 2024 +0200
+
+    Added per-Attack-Type Alerts to the plugin. Also separated classify Connections method into multiple smaller methods, since it was getting bloated. Moved some logic to the .cc file. There are still a lot of functions defined in the header that need to be migrated. Next step is to implement parallelization for attack type classification, since in its current implementation, the differente detection models go through the expired connections in sequential order which is way too slow
+
+commit 2527ef16a5f7dcee5b6c958a2d7396290f035298
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Thu May 16 23:13:37 2024 +0200
+
+    Added additional XGBoost models for the remaining Attack types
+
+commit e403165588572353889956bbfde8874096b8a937
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Thu May 16 22:15:28 2024 +0200
+
+    Added XGBoost Models for sql-injection and infiltration detection. Additionally replaced the botnet model, since it was previously trained on the wrong data due to a typo in the attackTypeFormatter script. Both the script and the model have been updated
+
+commit 51d858f65149918e9d5622ae0f5439c8290351ae
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Thu May 16 21:16:16 2024 +0200
+
+    Added XGBoostTraining script in python. Works analogously to the Neural Network Trainnig Script, but for Gradient Boosting. Appears to have superior performance characteristics for models with high class imbalance such as for infiltration/sql-injection detection
+
+commit a5bce44821bbcb7ddc10a6df2d7a662e8171043d
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Tue May 14 23:46:46 2024 +0200
+
+    Added NeuralNetwork Training Script. Documentation on its implmentation and utilization will be provided in the following commits. Filepaths still need to be updated. Furthermore 3 already trained models have been added, each specialized on a certain attack type. sql-injection and infiltration attacks are purposefully omitted for now due to their poor performance. A seperate script utilizing an XGBoost Classifier will be added in the following commits, as it seems to perform better for these attack-types than the Neural Network
+
+commit 2eb7960396427b44888724c250ddf34952de005a
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Mon May 13 22:17:21 2024 +0200
+
+    Removed unused joblibs and legacy content from Initimuras version. Added notice regarding Model training data
+
+commit 50029561420a5ca9bca2444a07499e2079ef3290
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Mon May 13 21:48:23 2024 +0200
+
+    Added attackTypeFormatter.py. It's main use lies in taking the cleaned csv Data from all the different attack days and extracting Flows based on their attack type accross multiple days. After extracting said flows it concats and shuffles them before saving them as <attack-type>Day.csv. Local filepaths still need to be updated
+
+commit c4fc49eca776f6218541c184383e506196c0c65c
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Fri May 10 11:57:41 2024 +0200
+
+    Moved to private repository
+
+commit ecd7c243f6f0c548735d89501214273bec5dec15
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Wed May 1 04:26:53 2024 +0200
+
+    Added python csv Transformer aiming to take the output of the classifytraffic function from the classifers headerfile and transform it into csv format before further utilization by the ML model. Yet to be integrated
+
+commit 41018bf0c80a604d45061111eb51933e92888220
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Thu Apr 25 03:14:09 2024 +0200
+
+    Changed Inspector Type to Packet. Seems to have fixed the issue
+
+commit debf32676210d8e6453838cae34147ec3429d5eb
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Tue Apr 23 23:11:18 2024 +0200
+
+    Adapted the README
+
+commit c19e057e89e8510f9273666c1a47342a8824d47b
+Author: Raoulimer <raoulx10@gmail.com>
+Date:   Tue Apr 23 23:00:06 2024 +0200
+
+    Changed user specific paths, changed CMake so it also exports Compile commands for better LSP support. Fixed signature MLClassifiers:show to match new signature of Inspector
+
+commit d873b05952dacc1d8f6100234d5ae4ff3e2660b0
+Merge: 92c014d f45d973
+Author: Luan Utimura <luan.utimura@gmail.com>
+Date:   Sun Mar 22 14:43:22 2020 -0300
+
+    Merge branch 'wip'
+
+commit 92c014d6904bb3470e4b8299184ed9c30bb29c1a
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Sat Feb 22 12:21:12 2020 -0300
+
+    Update README.md
+
+commit ea213bc15b6b62bb6ce7e678a4a64ae168c09830
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Thu Jan 30 20:08:45 2020 -0300
+
+    Update README.md
+
+commit ad7c8664581e0e8bac7c482fbc49bd718f554ac7
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Thu Jan 30 19:56:43 2020 -0300
+
+    Create LICENSE
+
+commit f45d9738e749cc2e1f4f623cf000eea56279c8ba
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Sun Dec 15 00:53:43 2019 -0300
+
+    Add final adjustments
+
+commit 6af9267c02fedc882d0dacb189470178f71b8a0b
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Sat Dec 7 18:41:24 2019 -0300
+
+    Add more rounds of training for each technique
+
+commit 8cd4d7a6116b21269a33d38e29f065df2c110f69
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Wed Oct 30 22:43:20 2019 -0300
+
+    Fix the calculation of some flow features
+
+commit b689767ab985a0b29427928848119f3808edb36b
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Sat Sep 7 02:34:42 2019 -0300
+
+    Add tests for embedded python
+
+commit aba0a1864c02d0b647c389aa3fea3c9760e3599e
+Author: Luan Utimura <lnutimura@hotmail.com.br>
+Date:   Thu Aug 1 14:26:43 2019 -0300
+
+    Add project files
